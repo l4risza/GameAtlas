@@ -1,5 +1,9 @@
 import { Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
+import Explorar from './pages/Explorar';
+import Reviews from './pages/Reviews';
+import Listas from './pages/Listas';    
+import Perfil from './pages/Perfil';
 
 // Placeholders — troque por suas páginas reais quando estiverem prontas
 function Placeholder({ titulo }) {
@@ -14,11 +18,12 @@ function App() {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/explorar" element={<Placeholder titulo="Explorar" />} />
-            <Route path="/reviews" element={<Placeholder titulo="Reviews" />} />
-            <Route path="/listas" element={<Placeholder titulo="Listas" />} />
+            <Route path="/explorar" element={<Explorar />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/listas" element={<Listas />} />
             <Route path="/login" element={<Placeholder titulo="Login" />} />
             <Route path="/cadastro" element={<Placeholder titulo="Cadastre-se" />} />
+            <Route path="/perfil" element={<Perfil />} />
             <Route path="/jogo/:id" element={<Placeholder titulo="Detalhes do jogo" />} />
             <Route path="*" element={<Placeholder titulo="Página não encontrada" />} />
         </Routes>

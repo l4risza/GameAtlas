@@ -1,4 +1,25 @@
-import '../styles/estilo.css'
+import GameCard from './GameCard';
+import '../styles/components.css';
+
+export default function GameSection({ title, games = [] }) {
+    // se a categoria ainda não tem jogos (ou a API não retornou nada), não renderiza a seção
+    if (!games.length) return null;
+
+    return (
+        <section>
+            <h4 className="section-title">{title}</h4>
+            <hr />
+            <div className="cards">
+                {games.map((game) => (
+                    <GameCard key={game.id} game={game} />
+                ))}
+            </div>
+        </section>
+    );
+}
+
+
+/*import '../styles/components.css'
 
 
 function GameSection({ titulo }) {
@@ -17,7 +38,7 @@ function GameSection({ titulo }) {
     )
 }
 
-export default GameSection
+export default GameSection */
 
 /*
 function GameSection({ titulo, id }) {

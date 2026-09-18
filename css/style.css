@@ -301,6 +301,19 @@ body {
     margin-bottom: 25px;
     box-shadow: 0 0 18px rgba(147, 51, 234, 0.15);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+}
+
+.info-card {
+    background-color: #140A28;
+    border: 1px solid #9333EA;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 0 18px rgba(147, 51, 234, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: block;
+    width: 100%;
 }
 
 .perfil-card:hover {
@@ -363,13 +376,13 @@ body {
     font-size: 1rem;
 }
 
-.habilidades {
+.jogos-fav {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-.tag-habilidade {
+.tag-jogo-fav {
     background-color: #1F0F3A;
     color: #F5F3FF;
     border: 1px solid #9333EA;
@@ -379,7 +392,7 @@ body {
     transition: 0.2s;
 }
 
-.tag-habilidade:hover {
+.tag-jogo-fav:hover {
     background-color: #9333EA;
     box-shadow: 0 0 12px rgba(147, 51, 234, 0.5);
     cursor: default;
@@ -389,6 +402,9 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
+    float: right;
+    padding-left: 650px;
+    padding-bottom: 120px;
 }
 
 .btn-rede {
@@ -397,7 +413,7 @@ body {
     background-color: #1F0F3A;
     border: 1px solid #9333EA;
     padding: 12px 18px;
-    border-radius: 12px;
+    border-radius: 500px;
     transition: 0.2s ease;
     display: inline-flex;
     align-items: center;

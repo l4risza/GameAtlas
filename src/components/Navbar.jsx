@@ -52,7 +52,7 @@ export default function Navbar({
                 <div className="container-fluid navbar-inner">
 
                     <div className="navbar-brand-wrap">
-                        <Link className="nav-link active brand-link" to="/Home" onClick={closeMenu}>
+                        <Link className="nav-link active brand-link" to="/" onClick={closeMenu}>
                             <img src={logoSrc} alt="logo" className="logo-img" />
                             <h5 className="title m-0">{brandName}</h5>
                         </Link>

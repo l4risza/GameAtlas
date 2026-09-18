@@ -383,46 +383,6 @@ body {
     font-family: var(--font-family);
 }
 
-/*CARROSSEL
-.carousel-inner {
-    height: 100%;
-    position: relative;
-}
-
-.carousel-inner::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(11, 6, 19, 0.6), transparent);
-}
-
-.imgcarousel {
-    width: 100%;
-    height: 400px;
-    background: #7c72a7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.imgcarousel img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.carousel-caption {
-    position: absolute;
-    z-index: 2;
-    font-family: var(--font-family);
-}
-
-#myCarousel:hover {
-    cursor: pointer;
-}*/
-
-
 /*JOGOS*/
 hr {
     border: none;
@@ -547,6 +507,44 @@ hr {
     font-family: var(--font-family);
 }
 
+/*CARROSSEL
+.carousel-inner {
+    height: 100%;
+    position: relative;
+}
+
+.carousel-inner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(11, 6, 19, 0.6), transparent);
+}
+
+.imgcarousel {
+    width: 100%;
+    height: 400px;
+    background: #7c72a7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.imgcarousel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-caption {
+    position: absolute;
+    z-index: 2;
+    font-family: var(--font-family);
+}
+
+#myCarousel:hover {
+    cursor: pointer;
+}*/
 
 /*
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap');
