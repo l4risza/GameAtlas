@@ -95,7 +95,6 @@ export default function Navbar({
                                 onSubmit={handleSearchSubmit}
                             >
                                 <input
-                                    className="form-control"
                                     id="inputpesquisa"
                                     type="search"
                                     placeholder="Pesquisar..."
@@ -103,7 +102,7 @@ export default function Navbar({
                                     value={searchValue}
                                     onChange={(e) => setSearchValue(e.target.value)}
                                 />
-                                <button className="btn" type="submit" id="btnpesquisa">
+                                <button type="submit" id="btnpesquisa">
                                     <i className="bi bi-search"></i>
                                 </button>
                             </form>

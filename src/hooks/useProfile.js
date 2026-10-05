@@ -45,6 +45,14 @@ async function fetchProfileData() {
                 date: '25/08/2026',
                 text: 'Este tópico apresenta o levantamento de requisitos do sistema proposto, com o objetivo de definir suas funcionalidades e restrições de funcionamento. Os requisitos foram identificados a partir da análise de plataformas existentes e da revisão bibliográfica, buscando atender às necessidades dos usuários e garantir uma experiência adequada de utilização. Para melhor organização, os requisitos foram divididos em requisitos funcionais e requisitos...',
             },
+            {
+                id: 4,
+                gameTitle: 'Título do Jogo',
+                gameImage: '',
+                rating: 5,
+                date: '25/08/2026',
+                text: 'Este tópico apresenta o levantamento de requisitos do sistema proposto, com o objetivo de definir suas funcionalidades e restrições de funcionamento. Os requisitos foram identificados a partir da análise de plataformas existentes e da revisão bibliográfica, buscando atender às necessidades dos usuários e garantir uma experiência adequada de utilização. Para melhor organização, os requisitos foram divididos em requisitos funcionais e requisitos...',
+            }
         ],
         lists: [],
     };
