@@ -1,42 +1,51 @@
 # GameAtlas
 
-Este projeto é uma aplicação web voltada para explorar, descobrir, listar, ver e escrever reviews, incluindo cadastro de usuários.
+Projeto de TCC com front-end React/Vite e API Node.js/Express conectada à [RAWG](https://rawg.io/apidocs).
 
-## Estrutura do Projeto
+## Executar no VS Code
 
-* `index.html` → Página inicial
-* `login.html / login.js` → Sistema de login
-* `cadastro.html / cadastro.js` → Cadastro de usuários
-* `explorar.html` → Exploração de jogos de acordo com o filtro
-* `game.html` → Página de detalhes do jogo
-* `perfil.html` → Perfil do usuário
-* `data.js` → Dados simulados
-* `script.js` → Scripts gerais
-* `style.css` → Estilização customizada
-* `bootstrap/` → Biblioteca para estilização
+Abra a pasta `GameAtlas-RAWG` e execute no terminal:
 
-## Funcionalidades
+```powershell
+npm install
+npm --prefix backend install
+npm run dev
+```
 
-* Cadastro e login de usuários
-* Navegação entre jogos
-* Visualização de detalhes
-* Interface estilizada com Bootstrap
+O site abre em http://localhost:5173 e a API executa em http://localhost:3001. Nesta cópia local, a configuração privada está em `backend/.env.local`. Em uma nova instalação, copie `backend/.env.example` para `backend/.env.local` e preencha `RAWG_API_KEY` antes de iniciar. Não sobrescreva uma configuração existente.
 
-## Tecnologias utilizadas
+A chave RAWG fica exclusivamente no servidor. Nunca coloque a chave em variáveis `VITE_` ou envie arquivos `.env` para o GitHub.
 
-* HTML
-* CSS (Bootstrap)
-* JavaScript
+## Implementado nesta etapa
 
-## Como executar
+- Listagem de jogos e filtros por gênero, plataforma, desenvolvedor, tags, datas e notas.
+- Busca por trechos do nome pela navbar, com relevância, filtros de plataforma/gênero e paginação em Explorar.
+- Opção de ocultar demos/DLCs, ano e plataformas nos cards e botão para ampliar os resultados consultados.
+- Home e carrossel usando dados e imagens reais.
+- Detalhes ligados à rota `/jogo/:id`, com consulta direta pelo ID RAWG.
+- Descrições em português brasileiro, com cache no servidor.
+- Rotas de gêneros e plataformas para futuras interfaces de filtro.
+- Validação, cache, timeout e mensagens de erro.
+- Crédito e link RAWG nas páginas que utilizam seus dados.
 
-1. Baixe ou extraia o projeto
-2. Abra o arquivo `index.html` no navegador
-3. Navegue pelas páginas normalmente
+Perfil ainda usa dados simulados. Login, cadastro, listas, reviews, Supabase e autenticação permanecem nas etapas seguintes do projeto.
 
-## Observações
+## Estrutura
 
-* O projeto utiliza dados simulados (sem backend)
-* Algumas funcionalidades podem depender de armazenamento local (localStorage)
+- `backend/`: servidor Express, serviço RAWG, validações, configuração e testes.
+- `src/services/api.js`: chamadas do navegador para a API GameAtlas.
+- `src/hooks/`: carregamento dos jogos, detalhes e perfil.
+- `src/pages/`: páginas React.
+- `src/components/`: navbar, carrossel, cards e componentes compartilhados.
+- `public/`: imagens estáticas usadas pelo React.
 
----
+Os arquivos HTML/JS antigos do repositório foram mantidos como referência da migração; a entrada da aplicação atual é React/Vite.
+
+## Validar
+
+```powershell
+npm test
+npm run build
+```
+
+Veja [backend/README.md](backend/README.md) para rotas, exemplos de filtros, configuração e detalhes da integração. Os testes automatizados não usam a chave real nem consomem consultas RAWG. O comando `npm run lint` também verifica arquivos antigos e páginas inacabadas do GitHub, que ainda têm pendências anteriores a esta integração.

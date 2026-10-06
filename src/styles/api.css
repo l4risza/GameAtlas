@@ -1,0 +1,35 @@
+.api-page { padding-top: 100px; min-height: 65vh; }
+.api-feedback { color: var(--color-muted); text-align: center; padding: 2rem 1rem; }
+.api-title, .api-summary { color: var(--color-text); }
+.api-button { color: var(--color-text); background: var(--color-input-bg); border: 1px solid var(--color-accent-dark); border-radius: 8px; padding: .7rem 1rem; cursor: pointer; }
+.api-button:hover { background: var(--color-accent-dark); }
+.api-button:disabled { opacity: .45; cursor: default; }
+.api-button:focus-visible, .api-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.api-pagination { display: flex; justify-content: center; align-items: center; gap: 1rem; color: var(--color-text); margin-top: 2rem; }
+.rawg-credit { margin: .75rem 0 0; }
+.rawg-credit a, .api-link { color: var(--color-muted); }
+.api-carousel-caption { bottom: 3rem; left: 12%; right: 12%; color: var(--color-text); text-shadow: 0 2px 8px #000; }
+.api-carousel-caption h1 { font-size: clamp(1.5rem, 3vw, 2.8rem); }
+.carousel-slide .imgcarousel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent, rgba(0,0,0,.7)); pointer-events: none; }
+.api-game-page { max-width: 1100px; margin: 0 auto; padding: 110px 1.5rem 3rem; min-height: 65vh; color: var(--color-text); }
+.api-game-header { display: grid; grid-template-columns: minmax(220px, 340px) 1fr; gap: 2rem; margin: 1.5rem 0 2rem; }
+.api-game-image { width: 100%; border-radius: 12px; }
+.api-description { white-space: pre-line; line-height: 1.8; }
+.navbar-toggler { background: transparent; border: 1px solid var(--color-muted); border-radius: 6px; padding: .5rem; cursor: pointer; }
+.navbar-toggler-icon { display: block; width: 22px; height: 2px; margin: 8px 0; background: var(--color-text); box-shadow: 0 -6px var(--color-text), 0 6px var(--color-text); filter: none; }
+@media (max-width: 650px) { .api-game-header { grid-template-columns: 1fr; } }
+.search-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--color-accent-dark); border-radius: 12px; color: var(--color-text); background: var(--color-input-bg); }
+.search-filters > label { display: flex; flex-direction: column; gap: .5rem; font-weight: 600; }
+.search-filters select { width: 100%; min-height: 44px; padding: .6rem; border: 1px solid var(--color-muted); border-radius: 6px; color: var(--color-text); background: var(--color-bg); font: inherit; }
+.search-filters select option { color: #fff; background: #170d2a; }
+.search-filters select:focus-visible, .search-filter-check input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.search-filter-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.search-filter-check { display: flex; align-items: center; gap: .6rem; cursor: pointer; }
+.search-filter-check input { width: 18px; height: 18px; accent-color: var(--color-accent-dark); }
+.search-more { display: flex; justify-content: center; margin-top: 1rem; }
+.game-card-meta { margin: 0; padding: 0 .6rem .8rem; font-size: .75rem; line-height: 1.4; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 650px) {
+    .search-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .search-filters > label:last-of-type { grid-column: 1 / -1; }
+}
+@media (max-width: 450px) { .search-filters { grid-template-columns: 1fr; } }

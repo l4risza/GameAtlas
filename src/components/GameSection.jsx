@@ -1,7 +1,7 @@
 import GameCard from './GameCard';
 import '../styles/components.css';
 
-export default function GameSection({ title, games = [] }) {
+export default function GameSection({ title, games = [], showMetadata = false }) {
     // se a categoria ainda não tem jogos (ou a API não retornou nada), não renderiza a seção
     if (!games.length) return null;
 
@@ -11,7 +11,7 @@ export default function GameSection({ title, games = [] }) {
             <hr />
             <div className="cards">
                 {games.map((game) => (
-                    <GameCard key={game.id} game={game} />
+                    <GameCard key={game.id} game={game} showMetadata={showMetadata} />
                 ))}
             </div>
         </section>
