@@ -1,3 +1,4 @@
+import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import '../styles/components.css';
 
@@ -21,11 +22,7 @@ export default function Login() {
                 </>
             </main>
 
-            <footer className="footer text-center py-4 mt-5">
-                <p className="m-0">
-                    © {new Date().getFullYear()} GameAtlas. Todos os direitos reservados.
-                </p>
-            </footer>
+            <Footer />
 
         </>
     );

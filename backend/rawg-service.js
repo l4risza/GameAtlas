@@ -197,12 +197,19 @@ export function createRawgService({
         };
     }
 
-    async function categories(keys) {
+     async function categories(keys) {
+
         const end = new Date(now());
+
         const start = new Date(end);
         start.setUTCDate(start.getUTCDate() - 90);
+
+        const twoYearsAgo = new Date(end);
+        twoYearsAgo.setUTCFullYear(twoYearsAgo.getUTCFullYear() - 2);
+
         const queries = {
-            emAlta: { ordering: '-added' },
+            //emAlta: { ordering: '-added'},
+            emAlta: {ordering: '-added', dates: `${twoYearsAgo.toISOString().slice(0, 10)},${end.toISOString().slice(0, 10)}`},
             melhoresAv: { ordering: '-metacritic', metacritic: '1,100' },
             lancamentos: { ordering: '-released', dates: `${start.toISOString().slice(0, 10)},${end.toISOString().slice(0, 10)}` },
             classicos: { ordering: '-added', dates: '1970-01-01,2015-12-31' },

@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import GameSection from '../components/GameSection';
 import { useGames } from '../hooks/useGames';
 import '../styles/components.css';
+import Footer from "../components/Footer";
 
 export default function Reviews() {
     const { loading, resolveCategory } = useGames();
@@ -23,11 +24,7 @@ export default function Reviews() {
                 </>
             </main>
 
-            <footer className="footer text-center py-4 mt-5">
-                <p className="m-0">
-                    © {new Date().getFullYear()} GameAtlas. Todos os direitos reservados.
-                </p>
-            </footer>
+            <Footer />
 
         </>
     );

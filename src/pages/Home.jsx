@@ -15,7 +15,7 @@ export default function Home() {
             <main className="container-fluid px-3 px-lg-5 api-page">
                 <ApiFeedback loading={loading} error={error} onRetry={reload} />
                 {!loading && !error && <>
-                    <Carousel games={resolveCategory('emAlta').slice(0, 3)} />
+                    <Carousel games={resolveCategory('emAlta').slice(0, 5)} />
                     <GameSection title="Em alta" games={resolveCategory('emAlta')} />
                     <GameSection title="Melhores avaliados no Metacritic" games={resolveCategory('melhoresAv')} />
                     <GameSection title="Lançamentos recentes" games={resolveCategory('lancamentos')} />

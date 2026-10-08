@@ -4,6 +4,7 @@ import ProfileTabs from '../components/ProfileTabs';
 import ReviewCard from '../components/ReviewCard';
 import { useProfile } from '../hooks/useProfile';
 import '../styles/components.css';
+import Footer from '../components/Footer';
 
 const PAGE_SIZE = 3;
 
@@ -117,47 +118,7 @@ export default function Profile() {
                 </section>
             </main>
 
-            <footer className="footer text-center py-4 mt-5">
-                <p className="m-0">
-                    <small>© {new Date().getFullYear()} GameAtlas. Todos os direitos reservados.</small>
-                </p>
-            </footer>
+            <Footer />
         </>
     );
 }
-
-{/*
-import Navbar from "../components/Navbar";
-import GameSection from '../components/GameSection';
-import { useGames } from '../hooks/useGames';
-import '../styles/perfil.css';
-
-export default function Perfil() {
-    const { loading, resolveCategory } = useGames();
-
-    return (
-        <>
-
-            <Navbar />
-
-            <main
-                style={{ paddingTop: '70px' }}
-                className="container-fluid px-3 px-lg-5"
-            >
-
-                <>
-                   <h1>Perfil</h1>
-                    
-                
-                </>
-            </main>
-
-            <footer className="footer text-center py-4 mt-5">
-                <p className="m-0">
-                    © {new Date().getFullYear()} GameAtlas. Todos os direitos reservados.
-                </p>
-            </footer>
-
-        </>
-    );
-} */}
