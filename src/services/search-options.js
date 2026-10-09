@@ -13,5 +13,24 @@ export const GENRES = [
 ];
 
 export const SORTS = [
-    ['relevance', 'Relevância'], ['popular', 'Mais populares'], ['rating', 'Melhores notas'], ['name', 'Nome (A–Z)'],
+    ['relevance', 'Relevância'], ['popular', 'Mais populares'], ['rating', 'Melhores notas'], ['recent', 'Mais Recentes'],
+    ['name', 'Nome (A–Z)'],
 ];
+
+export const ORDERING_BY_SORT = {
+    relevance: '-added', popular: '-added', rating: '-rating', recent: '-released', name: 'name',
+};
+
+export const CATEGORY_EXPLORE_PARAMS = {
+    emAlta: { ordem: 'popular' },
+    melhoresAv: { ordem: 'rating' },
+    lancamentos: { ordem: 'recent' },
+    classicos: { dates: '1970-01-01,2015-12-31' },
+    indie: { genero: 'indie' },
+    multiplayer: { tags: 'multiplayer' },
+};
+
+export function categoryExploreLink(key) {
+    const extra = CATEGORY_EXPLORE_PARAMS[key];
+    return extra ? `/explorar?${new URLSearchParams(extra)}` : '/explorar';
+}
