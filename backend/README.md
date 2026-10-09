@@ -4,7 +4,7 @@ API em Node.js e Express para consulta de jogos na RAWG e fornecimento de dados 
 
 ## Configuração
 
-Requer Node.js 22 ou mais recente. Na raiz do projeto:
+Requer Node.js 22.19 ou mais recente. Na raiz do projeto:
 
 ```powershell
 npm install
@@ -19,6 +19,14 @@ npm run dev
 ```
 
 Esse comando inicia a API em http://localhost:3001 e o React em http://localhost:5173. Para iniciar somente a API, use `npm run dev:api` ou `npm run start:api`.
+
+A inicialização usa `--use-system-ca` para aceitar os certificados confiáveis do sistema operacional nas conexões HTTPS, conforme a [documentação do Node.js](https://nodejs.org/learn/http/enterprise-network-configuration). Isso corrigiu a cadeia de certificados da conexão RAWG neste Windows.
+
+## Supabase e vínculo de jogos
+
+Configurar também `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY` em `backend/.env.local`. A chave Secret permanece no backend. O endpoint `POST /api/biblioteca/jogos/:id` exige a sessão em `Authorization: Bearer`, verifica o usuário no Supabase Auth e retorna `{ id, rawg_id, nome, slug, capa_url }` do jogo local. Reutiliza o `rawg_id` único ou consulta os dados na RAWG antes de gravar. Metadados enviados pelo navegador são ignorados.
+
+Esse endpoint só mantém o catálogo. As gravações de listas, notas e Jogos Salvos usam o Supabase no React com o JWT do usuário e suas regras RLS. Consulte [o banco](../supabase/README.md) para estrutura, permissões e testes de integração.
 
 ## Rotas GET
 
@@ -85,7 +93,7 @@ Referência da biblioteca: https://github.com/vitalets/google-translate-api
 
 O navegador chama `/api`; o Vite encaminha para `http://127.0.0.1:3001`. Home/carrossel usam jogos reais, Explorar lê `busca` da navbar e oferece filtros de plataforma/gênero, ordenação, ocultação de demos/DLCs, paginação e ampliação dos resultados. A URL conserva filtros e páginas ao compartilhar ou navegar pelo histórico; mudanças nos filtros voltam à primeira página e ao primeiro lote. Os cards da busca mostram ano e plataformas. `/jogo/:id` consulta detalhes diretamente. As páginas que exibem os dados incluem crédito e link para RAWG, conforme https://rawg.io/apidocs.
 
-Para hospedagem separada, configure `VITE_API_URL=https://seu-backend/api` antes de gerar o front-end e `CORS_ORIGINS=https://seu-frontend` no servidor. `PORT` configura a porta da API. O comando de build gera somente o front-end; o Node/Express precisa continuar executando separadamente. Supabase, autenticação e gravação de listas/reviews não estão incluídos nesta etapa.
+Para hospedagem separada, configure `VITE_API_URL=https://seu-backend/api` antes de gerar o front-end e `CORS_ORIGINS=https://seu-frontend` no servidor. `PORT` configura a porta da API. Configure também as variáveis Supabase e as URLs de retorno de autenticação do domínio real. O comando de build gera somente o front-end; o Node/Express precisa continuar executando separadamente.
 
 ## Verificação
 

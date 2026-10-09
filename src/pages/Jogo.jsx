@@ -5,6 +5,7 @@ import ApiFeedback from '../components/ApiFeedback';
 import { useGame } from '../hooks/useGame';
 import '../styles/components.css';
 import '../styles/api.css';
+import GameAccount from '../components/GameAccount';
 
 
 export default function Jogo() {
@@ -36,6 +37,7 @@ export default function Jogo() {
                             {game.website && <a className="api-link" href={game.website} target="_blank" rel="noreferrer">Site oficial</a>}
                         </div>
                     </div>
+                    <GameAccount game={game} />
                     <h2>Sobre o jogo</h2>
                     {game.description_translation === 'unavailable' ? (
                         <div role="status">

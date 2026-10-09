@@ -1,9 +1,9 @@
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
-export async function requestJson(path, { signal } = {}) {
+export async function requestJson(path, { signal, method = 'GET', headers } = {}) {
     let response;
     try {
-        response = await fetch(`${API_BASE_URL}${path}`, { signal });
+        response = await fetch(`${API_BASE_URL}${path}`, { signal, method, headers });
     } catch (error) {
         if (error.name === 'AbortError') throw error;
         throw new Error('Não foi possível conectar à API do GameAtlas. Verifique se o servidor está em execução.', { cause: error });

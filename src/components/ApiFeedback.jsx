@@ -1,7 +1,7 @@
 import '../styles/api.css';
 
 export default function ApiFeedback({ loading, error, onRetry }) {
-    if (loading) return <p className="api-feedback" role="status">Carregando jogos...</p>;
+    if (loading) return <p className="api-feedback" role="status">Carregando...</p>;
     if (!error) return null;
     return (
         <div className="api-feedback" role="alert">

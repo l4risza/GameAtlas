@@ -1,0 +1,26 @@
+@import './api.css';
+.account-page { max-width: 1100px; margin: 0 auto; padding: 110px 1.5rem 3rem; min-height: 75vh; color: var(--color-text); }
+.account-page a, .game-account a { color: var(--color-muted); }
+.account-form { display: grid; gap: 1rem; margin-top: 1.2rem; }
+.auth-form { max-width: 480px; margin: 2rem auto; padding: 1.5rem; border: 1px solid var(--color-accent-dark); border-radius: 12px; }
+.account-form label { display: grid; gap: .4rem; }
+.account-form input, .account-form textarea, .account-form select, .account-select { min-width: 0; width: 100%; padding: .7rem; font: inherit; color: var(--color-text); background: var(--color-bg); border: 1px solid var(--color-muted); border-radius: 6px; }
+.account-form textarea { resize: vertical; }
+.account-form input:focus-visible, .account-form textarea:focus-visible, .account-form select:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.account-form label.account-check { display: flex; gap: .6rem; align-items: center; }
+.account-check input { width: 18px; height: 18px; }
+.account-panel, .game-account { background: var(--color-input-bg); border: 1px solid var(--color-accent-dark); border-radius: 12px; padding: 1.2rem; margin: 1.3rem 0; }
+.account-panel summary { cursor: pointer; font-weight: 600; }
+.account-actions, .account-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin: 1rem 0; }
+.account-tabs a { padding: .6rem .8rem; border: 1px solid var(--color-muted); border-radius: 8px; text-decoration: none; }
+.account-tabs a[aria-current="page"] { background: var(--color-accent-dark); color: var(--color-text); }
+.account-game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
+.account-game-tile { padding: 1rem; border: 1px solid var(--color-accent-dark); border-radius: 10px; max-width: 320px; }
+.account-game-tile img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
+.account-game-tile h3 { font-size: 1.1rem; margin: .8rem 0; }
+.account-logout { background: transparent; border: 0; font: inherit; cursor: pointer; }
+.review-card { margin-bottom: 1rem; }
+.review-card-title a { color: inherit; text-decoration: none; }
+.game-account { margin: 2rem 0; }
+.game-account .account-form { max-width: 650px; }
+[role="alert"] { color: #ffb8bc; }

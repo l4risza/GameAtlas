@@ -7,6 +7,8 @@ import Perfil from './pages/Perfil';
 import Jogo from './pages/Jogo';
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import JogosSalvos from './pages/JogosSalvos';
+import ListaDetalhes from './pages/ListaDetalhes';
 
 // Placeholders — troque por suas páginas reais quando estiverem prontas
 function Placeholder({ titulo }) {
@@ -24,6 +26,8 @@ function App() {
             <Route path="/explorar" element={<Explorar />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/listas" element={<Listas />} />
+            <Route path="/listas/:id" element={<ListaDetalhes />} />
+            <Route path="/jogos-salvos" element={<JogosSalvos />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/perfil" element={<Perfil />} />

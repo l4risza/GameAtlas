@@ -15,6 +15,9 @@ export function readConfig(env = process.env) {
     return {
         port,
         apiKey: env.RAWG_API_KEY?.trim() || '',
+        supabaseUrl: env.SUPABASE_URL?.trim() || '',
+        supabasePublishableKey: env.SUPABASE_PUBLISHABLE_KEY?.trim() || '',
+        supabaseSecretKey: env.SUPABASE_SECRET_KEY?.trim() || '',
         corsOrigins: (env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
             .split(',').map((origin) => origin.trim()).filter(Boolean),
     };

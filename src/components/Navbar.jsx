@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/auth-context';
+import { accountError, database } from '../services/supabase';
 import '../styles/components.css';
 
 export default function Navbar({
@@ -11,9 +13,8 @@ export default function Navbar({
         { label: 'LISTAS', to: '/listas' },
     ],
     // ---- estado de autenticação ----
-    isLoggedIn = true,
     perfilHref = '/perfil',
-    configHref = '/configuracoes',
+    configHref = '/perfil',
     // ---- customização de estilo (viram CSS variables usadas em components.css) ----
     fontFamily,
     fontSize,
@@ -25,6 +26,18 @@ export default function Navbar({
     const [menuOpen, setMenuOpen] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     const navigate = useNavigate();
+    const { user, loading } = useAuth();
+    const isLoggedIn = Boolean(user);
+    const [logoutError, setLogoutError] = useState('');
+    const [loggingOut, setLoggingOut] = useState(false);
+    async function logout() {
+        setLoggingOut(true); setLogoutError('');
+        try {
+            const { error } = await database().auth.signOut({ scope: 'local' });
+            if (error) throw error;
+            closeMenu(); navigate('/');
+        } catch (e) { setLogoutError(accountError(e)); } finally { setLoggingOut(false); }
+    }
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -109,6 +122,7 @@ export default function Navbar({
 
                             {isLoggedIn ? (
                                 <ul className="navbar-nav navbar-account">
+                                    <li className="nav-item"><Link className="nav-link text-nowrap" to="/jogos-salvos" onClick={closeMenu}>JOGOS SALVOS</Link></li>
                                     <li className="nav-item">
                                         <Link className="nav-link text-nowrap" to={perfilHref} onClick={closeMenu}>
                                             PERFIL
@@ -125,8 +139,9 @@ export default function Navbar({
                                             <span className="account-label-mobile">CONFIGURAÇÕES</span>
                                         </Link>
                                     </li>
+                                    <li className="nav-item"><button className="nav-link account-logout" type="button" disabled={loggingOut} onClick={logout}>{loggingOut ? 'SAINDO...' : 'SAIR'}</button></li>
                                 </ul>
-                            ) : (
+                            ) : !loading && (
                                 <ul className="navbar-nav navbar-account">
                                     <li className="nav-item">
                                         <Link className="nav-link text-nowrap" id="navlogin" to="/login" onClick={closeMenu}>
@@ -140,6 +155,7 @@ export default function Navbar({
                                     </li>
                                 </ul>
                             )}
+                            {logoutError && <p role="alert">{logoutError}</p>}
                         </div>
                     </div>
 

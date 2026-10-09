@@ -3,12 +3,18 @@ import cors from 'cors';
 import { ApiError } from './errors.js';
 import { gameId, integer, invalid, listQuery, searchQuery, text } from './validation.js';
 
-export function createApp({ rawg, corsOrigins = [] }) {
+export function createApp({ rawg, supabaseService, corsOrigins = [] }) {
     const app = express();
     app.disable('x-powered-by');
     app.use(cors({ origin: corsOrigins }));
 
     app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'GameAtlas API' }));
+
+    app.post('/api/biblioteca/jogos/:id', async (req, res) => {
+        const id = gameId(req.params.id);
+        if (!supabaseService) throw new ApiError(503, 'DATABASE_NOT_CONFIGURED', 'A conexão com o banco ainda não está configurada.');
+        res.json(await supabaseService.linkGame(req.get('authorization'), id, rawg));
+    });
 
     app.get('/api/jogos', async (req, res) => {
         res.json(await rawg.listGames(req.query.search ? searchQuery(req.query) : listQuery(req.query)));

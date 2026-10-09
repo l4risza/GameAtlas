@@ -1,4 +1,5 @@
 import '../styles/components.css';
+import { Link } from 'react-router-dom';
 
 function Stars({ rating, max = 5 }) {
     return (
@@ -19,14 +20,12 @@ export default function ReviewCard({ review }) {
 
             <div className="review-card-body">
                 <div className="review-card-head">
-                    <h3 className="review-card-title">{review.gameTitle}</h3>
-                    <button className="review-card-like" type="button" aria-label="Curtir review">
-                        <i className="bi bi-heart"></i>
-                        <span>{review.date}</span>
-                    </button>
+                    <h3 className="review-card-title"><Link to={`/jogo/${review.rawgId}`}>{review.gameTitle}</Link></h3>
+                    <span>{review.date}</span>
                 </div>
                 <Stars rating={review.rating} />
-                <p className="review-card-text">{review.text}</p>
+                <p>{review.author}</p>
+                {review.text && <p className="review-card-text">{review.text}</p>}
             </div>
         </article>
     );
