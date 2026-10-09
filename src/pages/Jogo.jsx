@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ApiFeedback from '../components/ApiFeedback';
@@ -6,14 +6,20 @@ import { useGame } from '../hooks/useGame';
 import '../styles/components.css';
 import '../styles/api.css';
 
+
 export default function Jogo() {
     const { id } = useParams();
     const { game, loading, error, reload } = useGame(id);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const goBack = () => (location.key !== 'default' ? navigate(-1) : navigate('/explorar'));
     return (
         <>
             <Navbar />
             <main className="api-game-page">
-                <Link className="api-link" to="/explorar">← Explorar jogos</Link>
+                <button type="button" className="back-button" aria-label="Voltar" onClick={goBack}>
+                    <i className="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
                 <ApiFeedback loading={loading} error={error} onRetry={reload} />
                 {game && <article>
                     <div className="api-game-header">
