@@ -14,6 +14,17 @@ html, body {
     padding: 0;
 }
 
+#root {
+    min-height: 100vh;
+    min-height: 100dvh; /* no celular, desconta a barra do navegador */
+    display: flex;
+    flex-direction: column;
+}
+
+#root > main {
+    flex: 1;
+}
+
 /* .header já existe no arquivo — adicione position:fixed nela,
    já que a classe "fixed-top" do Bootstrap sumiu */
 .header {
@@ -540,6 +551,7 @@ hr {
     margin-left: -10px;
     color: var(--color-muted);
     font-family: var(--font-family);
+    text-transform: uppercase;
 }
  
 .cards {
@@ -647,6 +659,22 @@ hr {
     color: var(--color-muted);
     font-family: var(--font-family);
 }
+
+/* PLATAFORMAS */
+.platforms { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem 2rem; margin-top: 1.5rem; }
+
+.platform-card { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 96px; text-decoration: none; }
+
+.platform-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--color-input-bg); border: 1px solid var(--color-accent-dark);
+    color: var(--color-text); font-size: 2rem; transition: 0.2s;
+}
+
+.platform-card:hover .platform-icon { background: var(--color-accent-dark); transform: scale(1.08); box-shadow: 0 0 16px rgba(147, 51, 234, 0.5); }
+
+.platform-name { color: var(--color-muted); font-size: 0.9rem; text-align: center; }
 
 /*JOGOS*/
 hr {
@@ -763,6 +791,15 @@ hr {
     margin: 50px 200px;
     gap: 50px;
 }
+
+.back-button {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.5rem; height: 2.5rem;
+    background: transparent; border: 1px solid var(--color-accent-dark);
+    border-radius: 50%; color: var(--color-text);
+    font-size: 1.2rem; cursor: pointer; transition: 0.2s;
+}
+.back-button:hover { background: var(--color-accent-dark); box-shadow: 0 0 12px rgba(147, 51, 234, 0.5); }
 
 /* PERFIL */
 

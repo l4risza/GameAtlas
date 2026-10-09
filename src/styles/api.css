@@ -33,3 +33,6 @@
     .search-filters > label:last-of-type { grid-column: 1 / -1; }
 }
 @media (max-width: 450px) { .search-filters { grid-template-columns: 1fr; } }
+.section-ver-mais { display: flex; justify-content: center; margin: 1.5rem 0 0; }
+.section-ver-mais .api-button { text-decoration: none; }
+
