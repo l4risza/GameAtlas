@@ -2,7 +2,7 @@ import { database, resultOf } from './supabase';
 import { requestJson } from './api';
 
 const GAME_COLUMNS = 'id,rawg_id,nome,capa_url';
-const REVIEW_COLUMNS = `id,usuario_id,nota,texto,criado_em,atualizado_em,jogos(${GAME_COLUMNS}),perfis(nome,username)`;
+const REVIEW_COLUMNS = `id,usuario_id,nota,texto,criado_em,atualizado_em,jogos!inner(${GAME_COLUMNS}),perfis(nome,username)`;
 export const PAGE_SIZE = 12;
 
 export const reviewView = (row) => ({ id: row.id, userId: row.usuario_id, rawgId: row.jogos.rawg_id,
@@ -10,9 +10,10 @@ export const reviewView = (row) => ({ id: row.id, userId: row.usuario_id, rawgId
     author: row.perfis?.username ? `@${row.perfis.username}` : row.perfis?.nome || 'Jogador',
     date: new Date(row.atualizado_em).toLocaleDateString('pt-BR') });
 
-export async function loadReviews(page = 1, userId) {
+export async function loadReviews(page = 1, userId, rawgId) {
     let query = database().from('reviews').select(REVIEW_COLUMNS, { count: 'exact' });
     if (userId) query = query.eq('usuario_id', userId);
+    if (rawgId) query = query.eq('jogos.rawg_id', rawgId);
     const { data, count } = await resultOf(query.order('atualizado_em', { ascending: false })
         .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1));
     return { items: data.map(reviewView), count };

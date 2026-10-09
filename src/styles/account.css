@@ -23,4 +23,7 @@
 .review-card-title a { color: inherit; text-decoration: none; }
 .game-account { margin: 2rem 0; }
 .game-account .account-form { max-width: 650px; }
+.save-control { flex-shrink: 0; }
+.save-error { max-width: 200px; font-size: .8rem; }
+.btn-save:disabled { opacity: .5; cursor: default; }
 [role="alert"] { color: #ffb8bc; }

@@ -32,7 +32,7 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav mb-2 mb-lg-0">
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="index.html" role="button" data-bs-toggle="dropdown"
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">Explorar</a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="explorar.html">Todos</a></li>
@@ -68,14 +68,13 @@
                             </ul>
                         </li>
                     </ul>
-
                 </div>
 
                 <div class="d-flex align-items-center ms-lg-auto">
 
                     <form class="d-flex me-lg-3 my-2 my-lg-0 w-100 w-lg-auto" id="pesquisa" role="search">
-                        <input class="form-control me-2" id="inputpesquisa" type="search" placeholder="Pesquise aqui..."
-                            aria-label="Search" />
+                        <input class="form-control me-2" id="inputpesquisa" type="search"
+                            placeholder="Pesquise aqui..." aria-label="Search" />
                         <button class="btn" type="submit" id="btnpesquisa">
                             <i class="bi bi-search"></i>
                         </button>
@@ -113,10 +112,6 @@
         </nav>
     </header>
 
-    <!-- Cole este bloco dentro do <body>, após o <header> -->
-
-    <!-- Cole este bloco dentro do <body>, após o <header> -->
-
     <div class="page-container">
         <div class="top-container">
 
@@ -125,22 +120,10 @@
 
                 <div class="media">
                     <div class="carouselgame" id="carouselgame">
-                        <video src="videos/deltarunetrailer.mp4" class="active" id="mainVideo"></video>
-                        <img src="images/deltarune-screenshot1.jpg">
-                        <img src="images/deltarune-screenshot2.jpg">
-                        <img src="images/deltarune-screenshot3.jpg">
-                        <img src="images/deltarune-screenshot4.jpg">
-                        <img src="images/deltarune-screenshot5.jpg">
-                        <img src="images/deltarune-screenshot6.jpg">
-                        <img src="images/deltarune-screenshot7.jpg">
-                        <img src="images/deltarune-screenshot8.jpg">
-                        <img src="images/deltarune-screenshot9.jpg">
-                        <img src="images/deltarune-screenshot10.jpg">
-
-                        <button class="carousel-arrow left" id="arrowLeft">
+                        <button class="carousel-arrow left" id="arrowLeft" aria-label="Anterior">
                             <i class="bi bi-chevron-left"></i>
                         </button>
-                        <button class="carousel-arrow right" id="arrowRight">
+                        <button class="carousel-arrow right" id="arrowRight" aria-label="Próxima">
                             <i class="bi bi-chevron-right"></i>
                         </button>
 
@@ -154,149 +137,32 @@
                         </div>
                     </div>
 
-                    <div class="thumbnails-wrapper">
-                        <div class="thumbnails" id="thumbnails">
-                            <img src="images/deltarune-trailer.jpg" data-index="0" class="active">
-                            <img src="images/deltarune-screenshot1.jpg" data-index="1">
-                            <img src="images/deltarune-screenshot2.jpg" data-index="2">
-                            <img src="images/deltarune-screenshot3.jpg" data-index="3">
-                            <img src="images/deltarune-screenshot4.jpg" data-index="4">
-                            <img src="images/deltarune-screenshot5.jpg" data-index="5">
-                            <img src="images/deltarune-screenshot6.jpg" data-index="6">
-                            <img src="images/deltarune-screenshot7.jpg" data-index="7">
-                            <img src="images/deltarune-screenshot8.jpg" data-index="8">
-                            <img src="images/deltarune-screenshot9.jpg" data-index="9">
-                            <img src="images/deltarune-screenshot10.jpg" data-index="10">
-                        </div>
+                    <div class="thumbnails-wrapper" id="thumbsWrapper">
+                        <div class="thumbnails" id="thumbnails"></div>
                     </div>
                 </div>
 
-                <!-- BOX INFERIOR ESQUERDO -->
-                <div class="box-left">
-                    <h2>Sobre o jogo</h2>
-
-                    <p>
-                        <strong>Deltarune</strong> é um RPG criado por Toby Fox, o mesmo desenvolvedor de Undertale.
-                        O jogo apresenta uma nova história em um universo paralelo, com personagens inéditos
-                        e versões alternativas de rostos conhecidos.
-                    </p>
-
-                    <div class="game-section">
-                        <h3>Sinopse</h3>
-                        <p>
-                            Você controla Kris, um humano que, junto com Susie e Ralsei, embarca em uma jornada
-                            através do Dark World. O jogo mistura humor, mistério e escolhas que influenciam
-                            diretamente o rumo da narrativa.
-                        </p>
-                    </div>
-
-                    <div class="game-section">
-                        <h3>Gameplay</h3>
-                        <ul>
-                            <li>Sistema de combate por turnos com elementos bullet hell</li>
-                            <li>Possibilidade de lutar ou poupar inimigos</li>
-                            <li>Habilidades únicas para cada personagem</li>
-                        </ul>
-                    </div>
-
-                    <div class="game-section">
-                        <h3>Trilha sonora</h3>
-                        <p>
-                            A trilha sonora é composta pelo próprio Toby Fox, com músicas marcantes
-                            que reforçam a emoção e identidade do jogo.
-                        </p>
-                    </div>
-
-                    <div class="game-section">
-                        <h3>Informações</h3>
-                        <ul class="info-list">
-                            <li><strong>Gênero:</strong> RPG, Indie</li>
-                            <li><strong>Modo:</strong> Single-player</li>
-                            <li><strong>Lançamento:</strong> Episódico</li>
-                            <li><strong>Estilo:</strong> Pixel Art</li>
-                        </ul>
-                    </div>
-                </div>
-
+                <!-- BOX "SOBRE O JOGO" (preenchido pelo JS) -->
+                <div class="box-left" id="boxLeft"></div>
             </div>
 
             <!-- COLUNA DIREITA -->
             <div class="col-right">
 
-                <div class="info">
-                    <div class="info-header">
-                        <h1>Deltarune</h1>
-                        <button class="btn-save" id="btnSave" title="Salvar jogo">
-                            <i class="bi bi-bookmark"></i>
-                        </button>
-                    </div>
-                    <p class="meta">
-                        <strong>Autor:</strong> Toby Fox<br>
-                        <strong>Publicadora:</strong> Toby Fox
-                    </p>
-                    <p class="desc">
-                        Mergulhe na história paralela de UNDERTALE! Lute ou poupe seus adversários em
-                        batalhas repletas de ação enquanto explora um mundo misterioso ao lado de um
-                        elenco cativante de personagens novos e conhecidos. Os capítulos 1 a 4 estarão disponíveis no
-                        lançamento,
-                        com mais capítulos previstos como atualizações gratuitas!
-                    </p>
-                    <div class="tags">
-                        <span>RPG</span>
-                        <span>Indie</span>
-                        <span>História</span>
-                        <span>Pixel Art</span>
-                    </div>
-                    <div class="review-row">
-                        <div class="chart-item">
-                            <canvas id="chartPublico" width="80" height="80"></canvas>
-                            <span class="chart-label">Público<br><strong>90</strong></span>
-                        </div>
-                        <div class="chart-item">
-                            <canvas id="chartCriticos" width="80" height="80"></canvas>
-                            <span class="chart-label">Críticos<br><strong>86</strong></span>
-                        </div>
-                    </div>
-                    <a href="reviews.html" class="btn-reviews">Ir para as reviews</a>
-                </div>
+                <!-- PAINEL DE INFORMAÇÕES (preenchido pelo JS) -->
+                <div class="info" id="info"></div>
 
                 <div class="col-right-bottom">
-
-                    <!-- BOX PLATAFORMAS -->
                     <div class="box-right">
                         <h2>Plataformas</h2>
-                        <div class="platforms">
-                            <span><i class="bi bi-windows"></i> PC</span>
-                            <span><i class="bi bi-nintendo-switch"></i> Nintendo Switch</span>
-                            <span><i class="bi bi-controller"></i> PlayStation</span>
-                        </div>
+                        <div class="platforms" id="platforms"></div>
                     </div>
 
-                    <!-- BOX JOGOS SIMILARES -->
-                    <div class="box-similar">
+                    <div class="box-similar" id="boxSimilar">
                         <h2>Jogos similares</h2>
-                        <div class="similar-list">
-                            <div class="similar-item">
-                                <img src="images/undertale.jpg" alt="Undertale">
-                                <span>Undertale</span>
-                            </div>
-                            <div class="similar-item">
-                                <img src="images/hollowknight.jpg" alt="Hollow Knight">
-                                <span>Hollow Knight</span>
-                            </div>
-                            <div class="similar-item">
-                                <img src="images/terraria.jpg" alt="Terraria">
-                                <span>Terraria</span>
-                            </div>
-                            <div class="similar-item">
-                                <img src="images/stardew.jpg" alt="Stardew Valley">
-                                <span>Stardew Valley</span>
-                            </div>
-                        </div>
+                        <div class="similar-list" id="similarList"></div>
                     </div>
-
                 </div>
-
             </div>
 
         </div>
@@ -306,141 +172,100 @@
         <p><small>© 2026 GameAtlas. Todos os direitos reservados.</small></p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <!-- dados de todos os jogos (const games) -->
+    <script src="data.js"></script>
+
     <script>
-        const mediaItems = document.querySelectorAll(".carouselgame > img, .carouselgame > video");
-        const thumbs = document.querySelectorAll(".thumbnails img");
-        const carousel = document.getElementById("carouselgame");
-        const mainVideo = document.getElementById("mainVideo");
-        const videoControls = document.getElementById("videoControls");
-        const btnPlayPause = document.getElementById("btnPlayPause");
-        const videoProgress = document.getElementById("videoProgress");
-        const videoVolume = document.getElementById("videoVolume");
-        const volIcon = document.getElementById("volIcon");
-        const arrowLeft = document.getElementById("arrowLeft");
-        const arrowRight = document.getElementById("arrowRight");
-        const btnSave = document.getElementById("btnSave");
-
-        let current = 0;
-        let interval;
-
-        function showMedia(index) {
-            mediaItems.forEach(item => {
-                item.classList.remove("active");
-                if (item.tagName === "VIDEO") {
-                    item.pause();
-                    item.currentTime = 0;
-                }
-            });
-            thumbs.forEach(t => t.classList.remove("active"));
-
-            mediaItems[index].classList.add("active");
-            thumbs[index].classList.add("active");
-            current = index;
-
-            thumbs[index].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-
-            const isVideo = mediaItems[index].tagName === "VIDEO";
-            videoControls.classList.toggle("visible", isVideo);
-
-            if (isVideo) {
-                mainVideo.play().catch(() => {
-                    btnPlayPause.innerHTML = '<i class="bi bi-play-fill"></i>';
-                });
-                btnPlayPause.innerHTML = '<i class="bi bi-pause-fill"></i>';
-                mainVideo.onended = () => {
-                    showMedia((current + 1) % mediaItems.length);
-                    startAuto();
-                };
-                clearInterval(interval);
-            } else {
-                startAuto();
+        /* ================================================================
+           DETALHES EXTRAS (opcionais) — só os jogos listados aqui têm
+           trailer, screenshots, sinopse etc. Os outros usam dados do data.js.
+           Para adicionar outro jogo, copie o bloco "deltarune" e troque o id.
+           ================================================================ */
+        const gameDetails = {
+            deltarune: {
+                author: "Toby Fox",
+                publisher: "Toby Fox",
+                longDescription:
+                    "Mergulhe na história paralela de UNDERTALE! Lute ou poupe seus adversários em batalhas repletas de ação " +
+                    "enquanto explora um mundo misterioso ao lado de um elenco cativante de personagens novos e conhecidos. " +
+                    "Os capítulos 1 a 4 estarão disponíveis no lançamento, com mais capítulos previstos como atualizações gratuitas!",
+                tags: ["RPG", "Indie", "História", "Pixel Art"],
+                publicScore: 90,
+                criticScore: 86,
+                trailer: { src: "videos/deltarunetrailer.mp4", poster: "images/deltarune-trailer.jpg" },
+                screenshots: Array.from({ length: 10 }, (_, i) => `images/deltarune-screenshot${i + 1}.jpg`),
+                about:
+                    "<strong>Deltarune</strong> é um RPG criado por Toby Fox, o mesmo desenvolvedor de Undertale. " +
+                    "O jogo apresenta uma nova história em um universo paralelo, com personagens inéditos " +
+                    "e versões alternativas de rostos conhecidos.",
+                synopsis:
+                    "Você controla Kris, um humano que, junto com Susie e Ralsei, embarca em uma jornada " +
+                    "através do Dark World. O jogo mistura humor, mistério e escolhas que influenciam " +
+                    "diretamente o rumo da narrativa.",
+                gameplay: [
+                    "Sistema de combate por turnos com elementos bullet hell",
+                    "Possibilidade de lutar ou poupar inimigos",
+                    "Habilidades únicas para cada personagem"
+                ],
+                soundtrack:
+                    "A trilha sonora é composta pelo próprio Toby Fox, com músicas marcantes " +
+                    "que reforçam a emoção e identidade do jogo.",
+                info: [
+                    ["Gênero", "RPG, Indie"],
+                    ["Modo", "Single-player"],
+                    ["Lançamento", "Episódico"],
+                    ["Estilo", "Pixel Art"]
+                ],
+                similar: ["undertale", "hollowknight", "terraria", "stardew"]
             }
+        };
+
+        /* ================================================================
+           HELPERS
+           ================================================================ */
+        const esc = (text) => String(text).replace(/[&<>"']/g, (c) => (
+            { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+        ));
+
+        const PLATFORM_ICONS = {
+            "PC": "bi-windows",
+            "PlayStation": "bi-playstation",
+            "Xbox": "bi-xbox",
+            "Nintendo Switch": "bi-nintendo-switch",
+            "Mobile": "bi-phone"
+        };
+
+        function parsePlatforms(text) {
+            if (/todas/i.test(text)) return ["PC", "PlayStation", "Xbox", "Nintendo Switch"];
+            return String(text).split("/")
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((p) => (/switch/i.test(p) ? "Nintendo Switch" : p));
         }
 
-        arrowLeft.addEventListener("click", () => {
-            clearInterval(interval);
-            showMedia((current - 1 + mediaItems.length) % mediaItems.length);
-        });
+        // ids escolhidos à mão (details.similar) ou calculados por gênero/perfil
+        function getSimilar(id, game, details) {
+            if (details.similar) return details.similar.filter((s) => games[s]).slice(0, 4);
 
-        arrowRight.addEventListener("click", () => {
-            clearInterval(interval);
-            showMedia((current + 1) % mediaItems.length);
-        });
-
-        thumbs.forEach(thumb => {
-            thumb.addEventListener("click", () => {
-                clearInterval(interval);
-                showMedia(parseInt(thumb.dataset.index));
-            });
-        });
-
-        function startAuto() {
-            clearInterval(interval);
-            interval = setInterval(() => {
-                showMedia((current + 1) % mediaItems.length);
-            }, 6000);
+            return Object.keys(games)
+                .filter((other) => other !== id)
+                .map((other) => {
+                    const g = games[other];
+                    const score = (g.genre === game.genre ? 3 : 0)
+                        + (!!g.indie === !!game.indie ? 1 : 0)
+                        + (!!g.multiplayer === !!game.multiplayer ? 0.5 : 0);
+                    return { id: other, score, rating: g.rating };
+                })
+                .sort((a, b) => b.score - a.score || b.rating - a.rating)
+                .slice(0, 4)
+                .map((x) => x.id);
         }
 
-        carousel.addEventListener("mouseenter", () => {
-            if (mediaItems[current].tagName === "VIDEO") {
-                videoControls.style.opacity = "1";
-                videoControls.style.pointerEvents = "all";
-            }
-        });
-
-        carousel.addEventListener("mouseleave", () => {
-            videoControls.style.opacity = "0";
-            videoControls.style.pointerEvents = "none";
-        });
-
-        btnPlayPause.addEventListener("click", () => {
-            if (mainVideo.paused) {
-                mainVideo.play();
-                btnPlayPause.innerHTML = '<i class="bi bi-pause-fill"></i>';
-            } else {
-                mainVideo.pause();
-                btnPlayPause.innerHTML = '<i class="bi bi-play-fill"></i>';
-            }
-        });
-
-        mainVideo.addEventListener("timeupdate", () => {
-            if (mainVideo.duration) {
-                videoProgress.max = mainVideo.duration;
-                videoProgress.value = mainVideo.currentTime;
-            }
-        });
-
-        videoProgress.addEventListener("input", () => {
-            mainVideo.currentTime = videoProgress.value;
-        });
-
-        videoVolume.addEventListener("input", () => {
-            mainVideo.volume = videoVolume.value;
-            volIcon.className = videoVolume.value == 0
-                ? "bi bi-volume-mute-fill"
-                : videoVolume.value < 0.5
-                    ? "bi bi-volume-down-fill"
-                    : "bi bi-volume-up-fill";
-        });
-
-        btnSave.addEventListener("click", () => {
-            btnSave.classList.toggle("saved");
-            const icon = btnSave.querySelector("i");
-            icon.className = btnSave.classList.contains("saved")
-                ? "bi bi-bookmark-fill"
-                : "bi bi-bookmark";
-        });
-
-        mainVideo.muted = true;
-        showMedia(0);
-        document.addEventListener("click", () => {
-            mainVideo.muted = false;
-            videoVolume.value = mainVideo.volume;
-        }, { once: true });
-
-        function drawChart(id, score, color) {
-            const canvas = document.getElementById(id);
-            if (!canvas) return;
+        function drawChart(canvas, score, color) {
             const ctx = canvas.getContext("2d");
             const r = 35, cx = 40, cy = 40;
             const angle = (score / 100) * 2 * Math.PI;
@@ -463,13 +288,286 @@
             ctx.fill();
         }
 
-        drawChart("chartPublico", 90, "#B39EB5");
-        drawChart("chartCriticos", 86, "#9333EA");
-    </script>
+        /* ================================================================
+           PÁGINA — game.html?id=deltarune
+           ================================================================ */
+        const gameId = new URLSearchParams(location.search).get("id") || "deltarune";
+        const game = games[gameId];
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+        if (!game) {
+            document.querySelector(".page-container").innerHTML =
+                '<p style="color:#B39EB5;text-align:center;padding:60px 0;">' +
+                'Jogo não encontrado. <a href="index.html" style="color:#B39EB5;">Voltar ao início</a></p>';
+        } else {
+            renderGame(gameId, game, gameDetails[gameId] || {});
+        }
+
+        function renderGame(id, game, d) {
+            document.title = game.title + " • GameAtlas";
+
+            /* ---------- textos ---------- */
+            const publicScore = d.publicScore ?? Math.round(game.rating * 10);
+            const hasCritic = typeof d.criticScore === "number";
+            const tags = d.tags || [game.genre, game.indie && "Indie", game.multiplayer && "Multiplayer"].filter(Boolean);
+            const infoList = d.info || [
+                ["Gênero", game.genre],
+                ["Modo", game.multiplayer ? "Multiplayer" : "Single-player"],
+                ["Lançamento", game.year]
+            ];
+
+            document.getElementById("info").innerHTML = `
+                <div class="info-header">
+                    <h1>${esc(game.title)}</h1>
+                    <button class="btn-save" id="btnSave" title="Salvar jogo"><i class="bi bi-bookmark"></i></button>
+                </div>
+                <p class="meta">
+                    ${d.author ? `<strong>Autor:</strong> ${esc(d.author)}<br>` : ""}
+                    ${d.publisher ? `<strong>Publicadora:</strong> ${esc(d.publisher)}<br>` : ""}
+                    <strong>Ano:</strong> ${esc(game.year)}
+                </p>
+                <p class="desc">${esc(d.longDescription || game.description)}</p>
+                <div class="tags">${tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
+                <div class="review-row">
+                    <div class="chart-item">
+                        <canvas id="chartPublico" width="80" height="80"></canvas>
+                        <span class="chart-label">Público<br><strong>${publicScore}</strong></span>
+                    </div>
+                    ${hasCritic ? `
+                    <div class="chart-item">
+                        <canvas id="chartCriticos" width="80" height="80"></canvas>
+                        <span class="chart-label">Críticos<br><strong>${d.criticScore}</strong></span>
+                    </div>` : ""}
+                </div>
+                <a href="reviews.html?jogo=${encodeURIComponent(id)}" class="btn-reviews">Ir para as reviews</a>
+            `;
+
+            drawChart(document.getElementById("chartPublico"), publicScore, "#B39EB5");
+            if (hasCritic) drawChart(document.getElementById("chartCriticos"), d.criticScore, "#9333EA");
+
+            document.getElementById("boxLeft").innerHTML = `
+                <h2>Sobre o jogo</h2>
+                <p>${d.about || esc(game.description)}</p>
+                ${d.synopsis ? `<div class="game-section"><h3>Sinopse</h3><p>${esc(d.synopsis)}</p></div>` : ""}
+                ${d.gameplay ? `<div class="game-section"><h3>Gameplay</h3><ul>${d.gameplay.map((g) => `<li>${esc(g)}</li>`).join("")}</ul></div>` : ""}
+                ${d.soundtrack ? `<div class="game-section"><h3>Trilha sonora</h3><p>${esc(d.soundtrack)}</p></div>` : ""}
+                <div class="game-section">
+                    <h3>Informações</h3>
+                    <ul class="info-list">
+                        ${infoList.map(([label, value]) => `<li><strong>${esc(label)}:</strong> ${esc(value)}</li>`).join("")}
+                    </ul>
+                </div>
+            `;
+
+            document.getElementById("platforms").innerHTML = parsePlatforms(game.platform)
+                .map((p) => `<span><i class="bi ${PLATFORM_ICONS[p] || "bi-controller"}"></i> ${esc(p)}</span>`)
+                .join("");
+
+            const similar = getSimilar(id, game, d);
+            if (similar.length) {
+                document.getElementById("similarList").innerHTML = similar.map((s) => `
+                    <a class="similar-item" href="game.html?id=${encodeURIComponent(s)}">
+                        <img src="${esc(games[s].image)}" alt="">
+                        <span>${esc(games[s].title)}</span>
+                    </a>`).join("");
+            } else {
+                document.getElementById("boxSimilar").style.display = "none";
+            }
+
+            /* ---------- botão salvar (localStorage) ---------- */
+            const SAVED_KEY = "gameatlas:jogos-salvos";
+            const readSaved = () => {
+                try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || []; } catch (e) { return []; }
+            };
+            const btnSave = document.getElementById("btnSave");
+            const paintSave = (saved) => {
+                btnSave.classList.toggle("saved", saved);
+                btnSave.querySelector("i").className = saved ? "bi bi-bookmark-fill" : "bi bi-bookmark";
+            };
+            paintSave(readSaved().includes(id));
+
+            btnSave.addEventListener("click", () => {
+                const list = readSaved();
+                const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+                try { localStorage.setItem(SAVED_KEY, JSON.stringify(next)); } catch (e) { }
+                paintSave(next.includes(id));
+            });
+
+            /* ---------- carrossel de mídia ---------- */
+            const items = [];
+            if (d.trailer) items.push({ type: "video", ...d.trailer });
+            (d.screenshots || []).forEach((src) => items.push({ type: "image", src }));
+            if (!items.length) items.push({ type: "image", src: game.banner || game.image });
+
+            const carousel = document.getElementById("carouselgame");
+            const thumbsEl = document.getElementById("thumbnails");
+            const thumbsWrapper = document.getElementById("thumbsWrapper");
+            const arrowLeft = document.getElementById("arrowLeft");
+            const arrowRight = document.getElementById("arrowRight");
+            const videoControls = document.getElementById("videoControls");
+            const btnPlayPause = document.getElementById("btnPlayPause");
+            const videoProgress = document.getElementById("videoProgress");
+            const videoVolume = document.getElementById("videoVolume");
+            const volIcon = document.getElementById("volIcon");
+
+            thumbsWrapper.style.position = "relative";
+
+            let mainVideo = null;
+            const mediaItems = items.map((item) => {
+                let el;
+                if (item.type === "video") {
+                    el = document.createElement("video");
+                    el.src = item.src;
+                    el.poster = item.poster || "";
+                    el.preload = "metadata";
+                    el.playsInline = true;
+                    el.muted = true;
+                    mainVideo = el;
+                } else {
+                    el = document.createElement("img");
+                    el.src = item.src;
+                    el.alt = game.title;
+                }
+                carousel.insertBefore(el, arrowLeft);
+                return el;
+            });
+
+            const thumbs = items.map((item, index) => {
+                const t = document.createElement("img");
+                t.src = item.type === "video" ? (item.poster || game.image) : item.src;
+                t.alt = "";
+                t.dataset.index = index;
+                thumbsEl.appendChild(t);
+                return t;
+            });
+
+            const single = items.length === 1;
+            if (single) {
+                arrowLeft.style.display = "none";
+                arrowRight.style.display = "none";
+                thumbsWrapper.style.display = "none";
+            }
+
+            let current = 0;
+            let interval;
+
+            function startAuto() {
+                clearInterval(interval);
+                if (single) return;
+                interval = setInterval(() => showMedia((current + 1) % mediaItems.length), 6000);
+            }
+
+            function showMedia(index) {
+                mediaItems.forEach((item) => {
+                    item.classList.remove("active");
+                    if (item.tagName === "VIDEO") {
+                        item.pause();
+                        item.currentTime = 0;
+                    }
+                });
+                thumbs.forEach((t) => t.classList.remove("active"));
+
+                mediaItems[index].classList.add("active");
+                thumbs[index].classList.add("active");
+                current = index;
+
+                // centraliza a miniatura ativa sem rolar a página
+                thumbsWrapper.scrollTo({
+                    left: thumbs[index].offsetLeft - (thumbsWrapper.clientWidth - thumbs[index].offsetWidth) / 2,
+                    behavior: "smooth"
+                });
+
+                const isVideo = mediaItems[index].tagName === "VIDEO";
+                videoControls.style.display = isVideo ? "" : "none";
+
+                if (isVideo) {
+                    mainVideo.play().catch(() => {
+                        btnPlayPause.innerHTML = '<i class="bi bi-play-fill"></i>';
+                    });
+                    btnPlayPause.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                    mainVideo.onended = () => {
+                        showMedia((current + 1) % mediaItems.length);
+                        startAuto();
+                    };
+                    clearInterval(interval);
+                } else {
+                    startAuto();
+                }
+            }
+
+            arrowLeft.addEventListener("click", () => {
+                clearInterval(interval);
+                showMedia((current - 1 + mediaItems.length) % mediaItems.length);
+            });
+
+            arrowRight.addEventListener("click", () => {
+                clearInterval(interval);
+                showMedia((current + 1) % mediaItems.length);
+            });
+
+            thumbs.forEach((thumb) => {
+                thumb.addEventListener("click", () => {
+                    clearInterval(interval);
+                    showMedia(parseInt(thumb.dataset.index, 10));
+                });
+            });
+
+            // controles do vídeo só aparecem com o mouse em cima
+            carousel.addEventListener("mouseenter", () => {
+                if (mediaItems[current].tagName === "VIDEO") {
+                    videoControls.style.opacity = "1";
+                    videoControls.style.pointerEvents = "all";
+                }
+            });
+
+            carousel.addEventListener("mouseleave", () => {
+                videoControls.style.opacity = "0";
+                videoControls.style.pointerEvents = "none";
+            });
+
+            if (mainVideo) {
+                btnPlayPause.addEventListener("click", () => {
+                    if (mainVideo.paused) {
+                        mainVideo.play();
+                        btnPlayPause.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                    } else {
+                        mainVideo.pause();
+                        btnPlayPause.innerHTML = '<i class="bi bi-play-fill"></i>';
+                    }
+                });
+
+                mainVideo.addEventListener("timeupdate", () => {
+                    if (mainVideo.duration) {
+                        videoProgress.max = mainVideo.duration;
+                        videoProgress.value = mainVideo.currentTime;
+                    }
+                });
+
+                videoProgress.addEventListener("input", () => {
+                    mainVideo.currentTime = videoProgress.value;
+                });
+
+                videoVolume.addEventListener("input", () => {
+                    mainVideo.volume = videoVolume.value;
+                    volIcon.className = videoVolume.value == 0
+                        ? "bi bi-volume-mute-fill"
+                        : videoVolume.value < 0.5
+                            ? "bi bi-volume-down-fill"
+                            : "bi bi-volume-up-fill";
+                });
+
+                // o vídeo começa mudo (regra de autoplay); libera o som no 1º clique na página
+                const unmute = (e) => {
+                    if (e.target.closest(".video-controls")) return;
+                    mainVideo.muted = false;
+                    videoVolume.value = mainVideo.volume;
+                    document.removeEventListener("click", unmute);
+                };
+                document.addEventListener("click", unmute);
+            }
+
+            showMedia(0);
+        }
+    </script>
 </body>
 
 </html>

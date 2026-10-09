@@ -13,6 +13,7 @@ const admin = createClient(config.supabaseUrl, config.supabaseSecretKey, options
 const visitor = createClient(config.supabaseUrl, config.supabasePublishableKey, options);
 const users = [];
 let gameId;
+let otherGameId;
 let existed = false;
 let passed = false;
 async function result(query) {
@@ -95,6 +96,12 @@ try {
     const joined = await result(a.client.from('reviews').select('id,jogos(id,rawg_id,nome,capa_url),perfis(nome,username)', { count: 'exact' })
         .eq('usuario_id', a.id).range(0, 11));
     assert.equal(joined.count, 1); assert.equal(joined.data[0].jogos.rawg_id, 3498);
+    const secondGame = await result(admin.from('jogos').insert({ rawg_id: 9000000000000002, nome: 'Outro jogo de teste' }).select('id').single());
+    otherGameId = secondGame.data.id;
+    await result(a.client.from('reviews').insert({ jogo_id: otherGameId, nota: 3 }));
+    const filtered = await result(visitor.from('reviews').select('id,jogos!inner(rawg_id)', { count: 'exact' })
+        .eq('jogos.rawg_id', 3498).eq('usuario_id', a.id).range(0, 11));
+    assert.equal(filtered.count, 1); assert.equal(filtered.data[0].id, review.id);
     await result(a.client.from('reviews').delete().eq('id', review.id));
     await result(a.client.from('listas').delete().eq('id', list.id));
     assert.equal((await result(a.client.from('lista_jogos').select('jogo_id').eq('lista_id', list.id))).data.length, 0);
@@ -103,6 +110,7 @@ try {
     passed = true;
 } finally {
     for (const id of users) await result(admin.auth.admin.deleteUser(id));
+    if (otherGameId) await result(admin.from('jogos').delete().eq('id', otherGameId));
     if (gameId && !existed) {
         const cleanup = await admin.from('jogos').delete().eq('id', gameId);
         // Uma interação real simultânea preserva o jogo por sua chave estrangeira.

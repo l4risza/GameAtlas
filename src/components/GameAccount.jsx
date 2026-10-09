@@ -41,12 +41,6 @@ function SignedGameAccount({ game, userId }) {
         <ApiFeedback loading={loading} error={error} onRetry={reload} />
         {actionError && <p role="alert">{actionError}</p>}{notice && <p role="status">{notice}</p>}
         {data && <>
-            <button className="api-button" type="button" disabled={busy} onClick={() => data.saved
-                ? run(() => removeSaved(data.gameId, userId), 'Jogo removido de Jogos Salvos.')
-                : run(() => saveGame(game.id, userId), 'Jogo salvo.')}>
-                {data.saved ? 'Remover de Jogos Salvos' : 'Salvar jogo'}
-            </button>
-            <p>Salvar mantém este jogo na sua página Jogos Salvos.</p>
             <ReviewForm key={`${data.review?.id}:${data.review?.nota}:${data.review?.texto}`} review={data.review} busy={busy}
                 onSave={(nota, texto) => run(() => saveReview(game.id, userId, nota, texto, data.review?.id), 'Avaliação salva.')}
                 onDelete={() => run(() => deleteReview(data.review.id, userId), 'Avaliação removida.')} />
@@ -63,6 +57,36 @@ function SignedGameAccount({ game, userId }) {
             <p><Link to="/listas?minhas=1">Criar ou gerenciar minhas listas</Link></p>
         </>}
     </section>;
+}
+
+function SignedSaveButton({ game, userId }) {
+    const load = useCallback(() => loadGameAccount(game.id, userId), [game.id, userId]);
+    const { data, loading, error, reload } = useAccountData(`salvar:${game.id}:${userId}`, load);
+    const [busy, setBusy] = useState(false);
+    const [actionError, setActionError] = useState('');
+    async function toggle() {
+        if (error) { reload(); return; }
+        setBusy(true); setActionError('');
+        try {
+            if (data.saved) await removeSaved(data.gameId, userId);
+            else await saveGame(game.id, userId);
+            reload();
+        } catch (e) { setActionError(accountError(e)); } finally { setBusy(false); }
+    }
+    const label = error ? 'Tentar carregar Jogos Salvos novamente' : data?.saved ? 'Remover de Jogos Salvos' : 'Salvar jogo';
+    return <div className="save-control"><button type="button" className={`btn-save${data?.saved ? ' saved' : ''}`}
+        title={label} aria-label={label} aria-pressed={Boolean(data?.saved)} aria-busy={busy || loading}
+        disabled={busy || loading} onClick={toggle}>
+        <i className={`bi ${data?.saved ? 'bi-bookmark-fill' : 'bi-bookmark'}`} aria-hidden="true"></i>
+    </button>{(error || actionError) && <p className="save-error" role="alert">{actionError || error}</p>}</div>;
+}
+
+export function GameSaveButton({ game }) {
+    const { user, loading, configured } = useAuth();
+    if (loading || !configured) return <button className="btn-save" type="button" disabled aria-label="Salvar jogo"><i className="bi bi-bookmark" aria-hidden="true"></i></button>;
+    if (!user) return <Link className="btn-save" title="Entre para salvar este jogo" aria-label="Entre para salvar este jogo"
+        to={`/login?voltar=${encodeURIComponent(`/jogo/${game.id}`)}`}><i className="bi bi-bookmark" aria-hidden="true"></i></Link>;
+    return <SignedSaveButton key={`${game.id}:${user.id}`} game={game} userId={user.id} />;
 }
 
 export default function GameAccount({ game }) {
