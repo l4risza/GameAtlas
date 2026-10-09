@@ -63,7 +63,7 @@ test('detalhes consultam diretamente o ID, inclusive fora da primeira página', 
 
 for (const path of [
     '/api/jogos/busca?q=%20', '/api/jogos?page=0', '/api/jogos?page=-1',
-    '/api/jogos?page_size=41', '/api/jogos?page=1&page=2', '/api/jogos?key=user-key', '/api/jogos?platforms=pc',
+    '/api/jogos?page_size=49', '/api/jogos?page=1&page=2', '/api/jogos?key=user-key', '/api/jogos?platforms=pc',
     '/api/jogos?ordering=unknown', '/api/jogos?dates=2026-02-30,2026-03-01',
     '/api/jogos?metacritic=100,10', '/api/jogos/categorias?include=unknown', '/api/jogos/invalid',
 ]) {

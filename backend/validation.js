@@ -48,7 +48,7 @@ export function listQuery(query) {
     if (query.key !== undefined) invalid('A chave RAWG é configurada apenas no servidor.');
     const params = {
         page: integer(query.page, 'page', 1),
-        page_size: integer(query.page_size, 'page_size', 20, 40),
+        page_size: integer(query.page_size, 'page_size', 20, 48),
         ordering: text(query.ordering, 'ordering') || '-added',
     };
     if (!params.ordering.split(',').every((field) => /^-?(name|released|added|created|updated|rating|metacritic)$/.test(field))) {

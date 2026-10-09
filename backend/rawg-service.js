@@ -121,8 +121,23 @@ export function createRawgService({
         try { return await task; } finally { pending.delete(cacheKey); }
     }
 
+    async function listLargePage(params) {
+        const page = Number(params.page || 1);
+        const half = Math.ceil(Number(params.page_size) / 2);
+        const first = await listGames({ ...params, page_size: half, page: page * 2 - 1 });
+        const second = first.next ? await listGames({ ...params, page_size: half, page: page * 2 }) : null;
+        return {
+            count: first.count,
+            count_scope: first.count_scope,
+            next: second?.next ? page + 1 : null,
+            previous: page > 1 ? page - 1 : null,
+            results: [...first.results, ...(second?.results || [])],
+        };
+    }
+
     async function listGames(params) {
         if (normalizeSearchText(params.search) && catalogPages) return searchGames(params);
+        if (Number(params.page_size) > 40) return listLargePage(params);
         const { sort = 'ordering', hide_extras = false } = params;
         const upstreamParams = { ...params };
         for (const option of ['sort', 'hide_extras', 'batch']) delete upstreamParams[option];
