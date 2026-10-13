@@ -407,13 +407,13 @@ body {
     margin-bottom: 12px;
 }
 
-.platforms {
+.game-platforms {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.platforms span {
+.game-platforms span {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -424,6 +424,8 @@ body {
     font-size: 13px;
     border: 1px solid #B39EB5;
 }
+
+
 
 
 /* ---- BOX JOGOS SIMILARES ---- */

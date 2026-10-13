@@ -400,7 +400,7 @@ function GameDetails({ game, reload }) {
                 <div className="col-right-bottom">
                     <div className="box-right">
                         <h2>Plataformas</h2>
-                        <div className="platforms">
+                        <div className="game-platforms">
                             {(game.platforms?.length ? game.platforms : [game.platform]).map((p) => (
                                 <span key={p}><i className={`bi ${platformIcon(p)}`}></i> {p}</span>
                             ))}
