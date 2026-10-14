@@ -1,21 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ApiFeedback from '../components/ApiFeedback';
-import GameAccount, { GameSaveButton } from '../components/GameAccount';
 import { useGame } from '../hooks/useGame';
 import { useGames } from '../hooks/useGames';
 import { GENRES } from '../services/search-options';
 import '../styles/components.css';
 import '../styles/api.css';
-import '../styles/Jogo.css'; // trecho "/*GAME*/" do css/style.css
+import '../styles/jogo.css';
 
-/* ================================================================
-   DETALHES EXTRAS (opcionais), indexados pelo slug da RAWG.
-   Só os jogos listados aqui têm trailer, screenshots, sinopse etc.
-   Os arquivos de mídia precisam estar em public/images e public/videos.
-   ================================================================ */
+/* Extras opcionais por slug. Sobrescrevem a mídia da RAWG (arquivos em public/). */
 const GAME_EXTRAS = {
     deltarune: {
         longDescription:
@@ -42,9 +37,7 @@ const GAME_EXTRAS = {
     },
 };
 
-/* ================================================================
-   HELPERS
-   ================================================================ */
+/* ---------------- helpers ---------------- */
 const PLATFORM_ICONS = [
     [/playstation/i, 'bi-playstation'],
     [/xbox/i, 'bi-xbox'],
@@ -55,59 +48,80 @@ const PLATFORM_ICONS = [
 ];
 const platformIcon = (name) => PLATFORM_ICONS.find(([re]) => re.test(name))?.[1] || 'bi-controller';
 
+const SAVED_KEY = 'gameatlas:jogos-salvos';
+const readSaved = () => {
+    try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || []; } catch { return []; }
+};
+
 const formatDate = (date) => (date ? date.split('-').reverse().join('/') : 'Não informado');
-const shorten = (text, max = 280) => (text.length > max ? `${text.slice(0, max).trimEnd()}…` : text);
+const shorten = (text, max = 260) => (text.length > max ? `${text.slice(0, max).trimEnd()}…` : text);
 const PLACEHOLDER = '/images/game-placeholder.svg';
 const fallbackImg = (event) => { event.currentTarget.onerror = null; event.currentTarget.src = PLACEHOLDER; };
+const MAX_DOTS = 12;
 
-// tenta descobrir o slug do gênero (usado em /explorar) a partir do nome vindo da API
 function genreSlug(name = '') {
     const n = name.trim().toLowerCase();
     return GENRES.find(([slug, label]) => label.toLowerCase() === n || slug === n.replace(/\s+/g, '-'))?.[0] || '';
 }
 
-/* ================================================================
-   GRÁFICO DE NOTA (antes: drawChart no <canvas>)
-   ================================================================ */
-function ScoreChart({ score, color, label }) {
-    const canvasRef = useRef(null);
+/* ---------------- avaliação em estrelas (estilo Google Play) ---------------- */
+const formatStars = (value) => value.toFixed(1).replace('.', ',');
 
-    useEffect(() => {
-        const ctx = canvasRef.current.getContext('2d');
-        const r = 35, cx = 40, cy = 40;
-        const angle = (score / 100) * 2 * Math.PI;
+function Stars({ value }) {
+    const clamped = Math.max(0, Math.min(5, value));
+    return (
+        <span className="stars" role="img" aria-label={`${formatStars(clamped)} de 5 estrelas`}>
+            <span className="stars-base" aria-hidden="true">★★★★★</span>
+            <span className="stars-fill" aria-hidden="true" style={{ width: `${(clamped / 5) * 100}%` }}>★★★★★</span>
+        </span>
+    );
+}
 
-        ctx.clearRect(0, 0, 80, 80);
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-        ctx.fillStyle = '#1a0f2e';
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + angle);
-        ctx.closePath();
-        ctx.fillStyle = color;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
-        ctx.fillStyle = '#2a2230';
-        ctx.fill();
-    }, [score, color]);
+function RatingSummary({ publicStars, criticScore, ratings, count }) {
+    const hasPublic = typeof publicStars === 'number' && publicStars > 0;
+    const hasCritic = typeof criticScore === 'number';
+    if (!hasPublic && !hasCritic) return null;
 
     return (
-        <div className="chart-item">
-            <canvas ref={canvasRef} width="80" height="80" />
-            <span className="chart-label">{label}<br /><strong>{score}</strong></span>
+        <div className="rating">
+            {hasPublic && (
+                <div className="rating-main">
+                    <div className="rating-score">
+                        <strong>{formatStars(publicStars)}</strong>
+                        <Stars value={publicStars} />
+                        <span className="rating-count">
+                            {count ? `${count.toLocaleString('pt-BR')} avaliações` : 'Avaliação do público'}
+                        </span>
+                    </div>
+
+                    {ratings?.length > 0 && (
+                        <div className="rating-bars" aria-hidden="true">
+                            {[5, 4, 3, 2, 1].map((star) => {
+                                const percent = ratings.find((item) => item.id === star)?.percent ?? 0;
+                                return (
+                                    <div key={star} className="rating-bar">
+                                        <span>{star}</span>
+                                        <div className="rating-track"><div style={{ width: `${percent}%` }} /></div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {hasCritic && (
+                <div className="rating-critics">
+                    <span>Críticos</span>
+                    <Stars value={criticScore / 20} />
+                    <strong>{criticScore}</strong><small>/100</small>
+                </div>
+            )}
         </div>
     );
 }
 
-/* ================================================================
-   CARROSSEL DE MÍDIA (trailer + screenshots)
-   ================================================================ */
+/* ---------------- carrossel: vídeo primeiro + screenshots ---------------- */
 function MediaCarousel({ items, alt }) {
     const [current, setCurrent] = useState(0);
     const [hover, setHover] = useState(false);
@@ -123,14 +137,18 @@ function MediaCarousel({ items, alt }) {
     const isVideo = items[current].type === 'video';
     const goTo = (index) => setCurrent((index + total) % total);
 
-    // avanço automático só nas imagens (o vídeo avança quando termina)
+    // só monta a imagem atual e as vizinhas (evita baixar 40 imagens de uma vez)
+    const isNear = (index) => {
+        const distance = Math.abs(index - current);
+        return Math.min(distance, total - distance) <= 1;
+    };
+
     useEffect(() => {
         if (single || isVideo) return undefined;
         const timer = setTimeout(() => setCurrent((c) => (c + 1) % total), 6000);
         return () => clearTimeout(timer);
     }, [current, single, isVideo, total]);
 
-    // toca o vídeo ao entrar nele e reinicia ao sair
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
@@ -142,7 +160,6 @@ function MediaCarousel({ items, alt }) {
         }
     }, [isVideo]);
 
-    // centraliza a miniatura ativa sem rolar a página
     useEffect(() => {
         const wrapper = thumbsRef.current;
         const thumb = thumbRefs.current[current];
@@ -153,7 +170,7 @@ function MediaCarousel({ items, alt }) {
         });
     }, [current]);
 
-    // o vídeo começa mudo (regra de autoplay); libera o som no 1º clique na página
+    // o vídeo começa mudo (regra de autoplay); libera o som no 1º clique
     useEffect(() => {
         const unmute = (event) => {
             if (event.target.closest('.video-controls') || !videoRef.current) return;
@@ -179,28 +196,34 @@ function MediaCarousel({ items, alt }) {
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
             >
-                {items.map((item, index) => (item.type === 'video' ? (
-                    <video
-                        key={item.src}
-                        ref={videoRef}
-                        src={item.src}
-                        poster={item.poster}
-                        className={index === current ? 'active' : ''}
-                        preload="metadata"
-                        playsInline
-                        muted
-                        onTimeUpdate={(e) => setProgress({ time: e.currentTarget.currentTime, duration: e.currentTarget.duration || 0 })}
-                        onEnded={() => goTo(current + 1)}
-                    />
-                ) : (
-                    <img
-                        key={item.src}
-                        src={item.src}
-                        alt={alt}
-                        className={index === current ? 'active' : ''}
-                        onError={fallbackImg}
-                    />
-                )))}
+                {items.map((item, index) => {
+                    if (item.type === 'video') {
+                        return (
+                            <video
+                                key={item.src}
+                                ref={videoRef}
+                                src={item.src}
+                                poster={item.poster || undefined}
+                                className={index === current ? 'active' : ''}
+                                preload="metadata"
+                                playsInline
+                                muted
+                                onTimeUpdate={(e) => setProgress({ time: e.currentTarget.currentTime, duration: e.currentTarget.duration || 0 })}
+                                onEnded={() => goTo(current + 1)}
+                            />
+                        );
+                    }
+                    if (!isNear(index)) return null;
+                    return (
+                        <img
+                            key={item.src}
+                            src={item.src}
+                            alt={index === current ? alt : ''}
+                            className={index === current ? 'active' : ''}
+                            onError={fallbackImg}
+                        />
+                    );
+                })}
 
                 {!single && (
                     <>
@@ -210,6 +233,18 @@ function MediaCarousel({ items, alt }) {
                         <button type="button" className="carousel-arrow right" aria-label="Próxima" onClick={() => goTo(current + 1)}>
                             <i className="bi bi-chevron-right"></i>
                         </button>
+
+                        <div className={`carousel-dots${isVideo ? ' above-controls' : ''}`}>
+                            {total <= MAX_DOTS ? items.map((item, index) => (
+                                <button
+                                    key={item.src}
+                                    type="button"
+                                    className={index === current ? 'active' : ''}
+                                    aria-label={`Ir para a mídia ${index + 1}`}
+                                    onClick={() => goTo(index)}
+                                />
+                            )) : <span className="carousel-counter">{current + 1} / {total}</span>}
+                        </div>
                     </>
                 )}
 
@@ -256,15 +291,20 @@ function MediaCarousel({ items, alt }) {
                 <div className="thumbnails-wrapper" ref={thumbsRef} style={{ position: 'relative' }}>
                     <div className="thumbnails">
                         {items.map((item, index) => (
-                            <img
+                            <div
                                 key={item.src}
                                 ref={(el) => { thumbRefs.current[index] = el; }}
-                                src={item.type === 'video' ? (item.poster || PLACEHOLDER) : item.src}
-                                alt=""
-                                className={index === current ? 'active' : ''}
+                                className={`thumb${index === current ? ' active' : ''}${item.type === 'video' ? ' is-video' : ''}`}
                                 onClick={() => goTo(index)}
-                                onError={fallbackImg}
-                            />
+                            >
+                                <img
+                                    src={item.type === 'video' ? (item.poster || PLACEHOLDER) : item.src}
+                                    alt=""
+                                    loading="lazy"
+                                    onError={fallbackImg}
+                                />
+                                {item.type === 'video' && <i className="bi bi-play-circle-fill"></i>}
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -273,9 +313,7 @@ function MediaCarousel({ items, alt }) {
     );
 }
 
-/* ================================================================
-   JOGOS SIMILARES (mesmo gênero, via API)
-   ================================================================ */
+/* ---------------- jogos similares ---------------- */
 function SimilarGames({ gameId, genre }) {
     const { results } = useGames({ genre });
     const similar = results.filter((g) => g.id !== gameId).slice(0, 4);
@@ -296,12 +334,20 @@ function SimilarGames({ gameId, genre }) {
     );
 }
 
-/* ================================================================
-   DETALHES DO JOGO
-   ================================================================ */
+/* ---------------- conteúdo da página ---------------- */
 function GameDetails({ game, reload }) {
     const extras = GAME_EXTRAS[game.slug] || {};
-    const publicScore = extras.publicScore ?? (game.rawg_rating !== null ? Math.round(game.rawg_rating * 20) : null);
+    const id = String(game.id);
+    const [saved, setSaved] = useState(() => readSaved().includes(id));
+
+    const toggleSave = () => {
+        const list = readSaved();
+        const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+        try { localStorage.setItem(SAVED_KEY, JSON.stringify(next)); } catch { /* sem localStorage */ }
+        setSaved(next.includes(id));
+    };
+
+    const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.rawg_rating;
     const criticScore = extras.criticScore ?? game.metacritic;
     const tags = extras.tags || [...(game.genres || []), game.multiplayer && 'Multiplayer'].filter(Boolean);
     const unavailable = game.description_translation === 'unavailable';
@@ -314,10 +360,18 @@ function GameDetails({ game, reload }) {
         game.playtime ? ['Tempo médio de jogo', `${game.playtime} horas`] : null,
     ].filter(Boolean);
 
-    const mediaItems = [];
-    if (extras.trailer) mediaItems.push({ type: 'video', ...extras.trailer });
-    (extras.screenshots || []).forEach((src) => mediaItems.push({ type: 'image', src }));
-    if (!mediaItems.length) mediaItems.push({ type: 'image', src: game.banner || game.image || PLACEHOLDER });
+    // vídeo (se existir) sempre primeiro, depois todas as screenshots
+    const mediaItems = useMemo(() => {
+        const cover = game.banner || game.image;
+        const trailer = extras.trailer || game.trailer;
+        const shots = extras.screenshots?.length ? extras.screenshots : (game.screenshots || []);
+        const items = [];
+
+        if (trailer?.src) items.push({ type: 'video', src: trailer.src, poster: trailer.poster || cover });
+        [...new Set(shots)].forEach((src) => items.push({ type: 'image', src }));
+        if (!items.some((item) => item.type === 'image')) items.push({ type: 'image', src: cover || PLACEHOLDER });
+        return items;
+    }, [extras, game.trailer, game.screenshots, game.banner, game.image]);
 
     const slug = genreSlug(game.genres?.[0]);
 
@@ -339,18 +393,14 @@ function GameDetails({ game, reload }) {
                         <p className="api-description" lang="pt-BR">{extras.about || fullDescription}</p>
                     )}
 
-                    {extras.synopsis && (
-                        <div className="game-section"><h3>Sinopse</h3><p>{extras.synopsis}</p></div>
-                    )}
+                    {extras.synopsis && <div className="game-section"><h3>Sinopse</h3><p>{extras.synopsis}</p></div>}
                     {extras.gameplay && (
                         <div className="game-section">
                             <h3>Gameplay</h3>
                             <ul>{extras.gameplay.map((g) => <li key={g}>{g}</li>)}</ul>
                         </div>
                     )}
-                    {extras.soundtrack && (
-                        <div className="game-section"><h3>Trilha sonora</h3><p>{extras.soundtrack}</p></div>
-                    )}
+                    {extras.soundtrack && <div className="game-section"><h3>Trilha sonora</h3><p>{extras.soundtrack}</p></div>}
 
                     <div className="game-section">
                         <h3>Informações</h3>
@@ -369,7 +419,15 @@ function GameDetails({ game, reload }) {
                 <div className="info">
                     <div className="info-header">
                         <h1>{game.title}</h1>
-                        <GameSaveButton game={game} />
+                        <button
+                            type="button"
+                            className={`btn-save${saved ? ' saved' : ''}`}
+                            title={saved ? 'Remover dos salvos' : 'Salvar jogo'}
+                            aria-pressed={saved}
+                            onClick={toggleSave}
+                        >
+                            <i className={`bi ${saved ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
+                        </button>
                     </div>
 
                     <p className="meta">
@@ -378,29 +436,30 @@ function GameDetails({ game, reload }) {
                         <strong>Ano:</strong> {game.year ?? 'Não informado'}
                     </p>
 
-                    <p className="desc">{extras.longDescription || shorten(unavailable ? 'Descrição indisponível no momento.' : fullDescription)}</p>
+                    <p className="desc">
+                        {extras.longDescription || shorten(unavailable ? 'Descrição indisponível no momento.' : fullDescription)}
+                    </p>
 
                     <div className="tags">{tags.map((t) => <span key={t}>{t}</span>)}</div>
 
-                    <div className="review-row">
-                        {publicScore !== null && <ScoreChart score={publicScore} color="#B39EB5" label="Público" />}
-                        {typeof criticScore === 'number' && <ScoreChart score={criticScore} color="#9333EA" label="Críticos" />}
-                    </div>
-
-                    <Link to={`/reviews?jogo=${encodeURIComponent(game.id)}`} className="btn-reviews">
-                        Ir para as reviews
-                    </Link>
+                    <RatingSummary
+                        publicStars={publicStars}
+                        criticScore={criticScore}
+                        ratings={game.ratings}
+                        count={game.ratings_count}
+                    />
 
                     {game.website && (
-                        <p><a className="api-link" href={game.website} target="_blank" rel="noreferrer">Site oficial</a></p>
+                        <a className="site-link" href={game.website} target="_blank" rel="noreferrer">
+                            <i className="bi bi-box-arrow-up-right"></i> Site oficial
+                        </a>
                     )}
                 </div>
 
-                <GameAccount game={game} />
                 <div className="col-right-bottom">
-                    <div className="box-right">
+                    <div className="game-platforms">
                         <h2>Plataformas</h2>
-                        <div className="game-platforms">
+                        <div className="platforms">
                             {(game.platforms?.length ? game.platforms : [game.platform]).map((p) => (
                                 <span key={p}><i className={`bi ${platformIcon(p)}`}></i> {p}</span>
                             ))}
@@ -414,9 +473,7 @@ function GameDetails({ game, reload }) {
     );
 }
 
-/* ================================================================
-   PÁGINA — /jogo/:id
-   ================================================================ */
+/* ---------------- página /jogo/:id ---------------- */
 export default function Jogo() {
     const { id } = useParams();
     const { game, loading, error, reload } = useGame(id);
@@ -432,9 +489,14 @@ export default function Jogo() {
         <>
             <Navbar />
             <main className="page-container">
-                <button type="button" className="back-button" aria-label="Voltar" onClick={goBack}>
-                    <i className="bi bi-chevron-left" aria-hidden="true"></i>
-                </button>
+                <nav className="game-tabs" aria-label="Seções do jogo">
+                    <button type="button" className="back-button" aria-label="Voltar" onClick={goBack}>
+                        <i className="bi bi-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <Link to={`/jogo/${encodeURIComponent(id)}`} className="active" aria-current="page">Visão Geral</Link>
+                    <Link to={`/reviews?jogo=${encodeURIComponent(id)}`}>Reviews</Link>
+                </nav>
+
                 <ApiFeedback loading={loading} error={error} onRetry={reload} />
                 {game && <GameDetails key={game.id} game={game} reload={reload} />}
             </main>

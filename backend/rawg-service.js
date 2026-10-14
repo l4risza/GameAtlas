@@ -20,6 +20,8 @@ export function normalizeGame(game) {
         rating: rawgRating === null ? null : Math.round(rawgRating * 20) / 10,
         rawg_rating: rawgRating,
         metacritic: game.metacritic ?? null,
+        ratings_count: game.ratings_count ?? null,
+        ratings: (game.ratings || []).map(({ id, title, count, percent }) => ({ id, title, count, percent })),
         platform: platforms.join(' / ') || 'Não informado',
         platforms,
         genre: genres.join(' / ') || 'Não informado',
@@ -34,10 +36,42 @@ export function normalizeGame(game) {
         rawg_url: game.slug ? `https://rawg.io/games/${encodeURIComponent(game.slug)}` : 'https://rawg.io',
     };
 }
+function normalizeMedia(data, screenshots, movies) {
+    const onlyUrls = (list) => [...new Set(list.filter((url) => /^https?:\/\//i.test(url || '')))];
 
+    const shots = onlyUrls(
+        (Array.isArray(screenshots?.results) ? screenshots.results : [])
+            .filter((shot) => !shot.is_deleted)
+            .map((shot) => shot.image),
+    );
+    const fallback = onlyUrls([data.background_image, data.background_image_additional]);
+
+    const movie = (Array.isArray(movies?.results) ? movies.results : [])
+        .find((item) => item?.data?.max || item?.data?.['480']);
+    const trailerSrc = movie?.data?.max || movie?.data?.['480'] || null;
+
+    return {
+        screenshots: shots.length ? shots : fallback,
+        trailer: /^https?:\/\//i.test(trailerSrc || '')
+            ? { name: movie.name || '', src: trailerSrc, poster: movie.preview || null }
+            : null,
+    };
+    const STEAM_APPDETAILS_URL = 'https://store.steampowered.com/api/appdetails';
+
+    function steamAppIdFromStores(stores) {
+        const list = Array.isArray(stores?.results) ? stores.results : [];
+        for (const item of list) {
+            const match = /^https?:\/\/store\.steampowered\.com\/app\/(\d+)/i.exec(item?.url || '');
+            if (match) return match[1];
+        }
+        return null;
+    }
+
+    const toHttps = (url) => (typeof url === 'string' ? url.replace(/^http:\/\//i, 'https://') : null);
+}
 export function createRawgService({
     apiKey, fetchImpl = fetch, timeoutMs = 15000, cacheTtlMs = 300000, now = Date.now,
-    retries = 2, retryDelayMs = 250, onDiagnostic = () => {},
+    retries = 2, retryDelayMs = 250, onDiagnostic = () => { },
     translateDescription,
     catalogPages = 25, catalogCacheFile,
 }) {
@@ -54,6 +88,32 @@ export function createRawgService({
 
     const searchCache = new Map();
     const searchPending = new Map();
+    const steamCache = new Map();
+
+    // Trailer da Steam é opcional: qualquer falha devolve null e a página abre normalmente.
+    async function steamTrailer(appId) {
+        const cached = steamCache.get(appId);
+        if (cached && cached.expires > now()) return cached.data;
+
+        let trailer = null;
+        try {
+            const url = new URL(STEAM_APPDETAILS_URL);
+            url.search = new URLSearchParams({ appids: appId, l: 'brazilian' }).toString();
+            const response = await fetchImpl(url, { signal: AbortSignal.timeout(6000) });
+            if (response.ok) {
+                const payload = await response.json();
+                const movies = payload?.[appId]?.data?.movies;
+                const movie = Array.isArray(movies)
+                    ? movies.find((item) => item?.mp4?.max || item?.mp4?.['480'])
+                    : null;
+                const src = toHttps(movie?.mp4?.max || movie?.mp4?.['480']);
+                if (src) trailer = { name: movie.name || '', src, poster: toHttps(movie.thumbnail) };
+            }
+        } catch { /* sem trailer */ }
+
+        steamCache.set(appId, { data: trailer, expires: now() + cacheTtlMs });
+        return trailer;
+    }
 
     async function fetchData(url, endpoint) {
         // Todas as tentativas compartilham o mesmo limite de 15 segundos.
@@ -80,8 +140,10 @@ export function createRawgService({
                 const retrying = retryable && attempt < retries;
                 const rawCode = error.cause?.code || error.code || error.name;
                 // O diagnóstico omite a URL completa, a chave e mensagens externas.
-                onDiagnostic({ endpoint, attempt: attempt + 1, status: upstreamStatus,
-                    code: /^[A-Z0-9_]+$/.test(rawCode || '') ? rawCode : 'RAWG_CONNECTION_ERROR', retrying });
+                onDiagnostic({
+                    endpoint, attempt: attempt + 1, status: upstreamStatus,
+                    code: /^[A-Z0-9_]+$/.test(rawCode || '') ? rawCode : 'RAWG_CONNECTION_ERROR', retrying
+                });
                 if (timedOut) throw new ApiError(504, 'RAWG_TIMEOUT', 'A RAWG demorou para responder. Tente novamente.');
                 if (!retrying) {
                     if (error instanceof ApiError) throw error;
@@ -212,7 +274,7 @@ export function createRawgService({
         };
     }
 
-     async function categories(keys) {
+    async function categories(keys) {
 
         const end = new Date(now());
 
@@ -224,7 +286,7 @@ export function createRawgService({
 
         const queries = {
             //emAlta: { ordering: '-added'},
-            emAlta: {ordering: '-added', dates: `${twoYearsAgo.toISOString().slice(0, 10)},${end.toISOString().slice(0, 10)}`},
+            emAlta: { ordering: '-added', dates: `${twoYearsAgo.toISOString().slice(0, 10)},${end.toISOString().slice(0, 10)}` },
             melhoresAv: { ordering: '-metacritic', metacritic: '1,100' },
             lancamentos: { ordering: '-released', dates: `${start.toISOString().slice(0, 10)},${end.toISOString().slice(0, 10)}` },
             classicos: { ordering: '-added', dates: '1970-01-01,2015-12-31' },
@@ -247,16 +309,28 @@ export function createRawgService({
         async getGame(id) {
             const data = await request(`games/${id}`);
             if (!Number.isInteger(data.id)) throw new ApiError(502, 'RAWG_INVALID_RESPONSE', 'A RAWG retornou uma resposta inválida.');
-            const game = normalizeGame(data);
+            // Mídia é opcional: se a RAWG falhar aqui, a página abre normalmente.
+            const [shotsResult, moviesResult] = await Promise.allSettled([
+                request(`games/${id}/screenshots`, { page_size: 40 }),
+                request(`games/${id}/movies`),
+            ]);
+            const game = {
+                ...normalizeGame(data),
+                ...normalizeMedia(data, shotsResult.value, moviesResult.value),
+            };
             if (!translateDescription) return game;
             try {
                 const translated = await translateDescription(game.description);
-                return { ...game, description: translated.text,
-                    description_translation: translated.status, description_language: translated.language };
+                return {
+                    ...game, description: translated.text,
+                    description_translation: translated.status, description_language: translated.language
+                };
             } catch {
                 // Uma falha de tradução não impede a exibição dos detalhes do jogo.
-                onDiagnostic({ endpoint: `games/${id}/translation`, attempt: 1, status: null,
-                    code: 'TRANSLATION_UNAVAILABLE', retrying: false });
+                onDiagnostic({
+                    endpoint: `games/${id}/translation`, attempt: 1, status: null,
+                    code: 'TRANSLATION_UNAVAILABLE', retrying: false
+                });
                 return { ...game, description: '', description_translation: 'unavailable', description_language: 'pt-BR' };
             }
         },
