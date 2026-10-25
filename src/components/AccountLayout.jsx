@@ -5,13 +5,13 @@ import { useAuth } from '../context/auth-context';
 import '../styles/account.css';
 
 export default function AccountLayout({ title, children, requireLogin = false }) {
-    const { user, loading, configured } = useAuth();
+    const { user, loading, configured, error: authError } = useAuth();
     const location = useLocation();
     if (requireLogin && configured && !loading && !user) {
         return <Navigate to={`/login?voltar=${encodeURIComponent(location.pathname + location.search)}`} replace />;
     }
     return <><Navbar /><main className="account-page"><h1>{title}</h1>
-        {!configured ? <p role="alert">A conexão com o banco ainda não está configurada.</p>
+        {!configured ? <p role="alert">{authError || 'A conexão com o banco ainda não está configurada.'}</p>
             : requireLogin && loading ? <p role="status">Carregando sua conta...</p> : children}
     </main><Footer /></>;
 }

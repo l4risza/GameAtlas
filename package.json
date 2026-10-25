@@ -9,6 +9,7 @@
     "dev:api": "npm --prefix backend run dev",
     "start:api": "npm --prefix backend start",
     "test": "npm --prefix backend test",
+    "test:auth": "node --test tests/auth.test.mjs tests/auth-sdk.test.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

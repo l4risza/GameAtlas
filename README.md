@@ -14,7 +14,7 @@ npm run dev
 
 O site abre em http://localhost:5173 e a API executa em http://localhost:3001. Nesta cópia local, a configuração privada está em `backend/.env.local`. Em uma nova instalação, copie `backend/.env.example` para `backend/.env.local` e preencha `RAWG_API_KEY` antes de iniciar. Não sobrescreva uma configuração existente.
 
-A configuração do Supabase no React fica em `.env.local` na raiz (`VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`). No backend, preencha também `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY`. Os arquivos locais já estão configurados nesta cópia e são ignorados pelo Git. Veja [supabase/README.md](supabase/README.md) para preparar uma nova instalação.
+A configuração pública usada pelo login e cadastro acompanha o clone em `src/config/supabase-public.json`. Para usar outro projeto, preencha juntas `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no `.env.local` da raiz e reinicie o site. No backend, preencha também `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY`. Os arquivos locais são ignorados pelo Git. Veja o [guia de autenticação](docs/autenticacao.md) e [supabase/README.md](supabase/README.md) para preparar uma nova instalação.
 
 As chaves RAWG e Supabase Secret ficam exclusivamente no servidor. Nunca coloque essas chaves em variáveis `VITE_` ou envie arquivos `.env` para o GitHub. A chave publishable é destinada ao navegador e depende das regras RLS.
 
@@ -37,7 +37,7 @@ As chaves RAWG e Supabase Secret ficam exclusivamente no servidor. Nunca coloque
 - Jogos Salvos privados, adicionados somente pela escolha do usuário.
 - Avaliações da comunidade, listas públicas e páginas pessoais com paginação.
 
-As rotas atuais usam React também ao abrir diretamente ou recarregar, preservando os HTML antigos como referência. O cadastro segue a confirmação de e-mail configurada pelo projeto Supabase. Falta a proprietária ajustar o Site URL para `http://localhost:5173` e adicionar `http://localhost:5173/perfil` aos Redirect URLs; o acesso atual de Desenvolvedor não permite alterar esses campos. Consulte os detalhes em [supabase/README.md](supabase/README.md).
+As rotas atuais usam React também ao abrir diretamente ou recarregar, preservando os HTML antigos como referência. O cadastro segue a confirmação de e-mail configurada pelo projeto Supabase. O projeto deve estar ativo, com o serviço de e-mail e os endereços de retorno configurados. Consulte o [guia de login e cadastro](docs/autenticacao.md).
 
 ## Estrutura
 

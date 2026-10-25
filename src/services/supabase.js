@@ -1,16 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import projectPublic from '../config/supabase-public.json';
+import { resolveAuthConfig } from './auth-config';
+import { authErrorMessage } from './auth';
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-export const supabase = url && key ? createClient(url, key) : null;
+const config = resolveAuthConfig(import.meta.env, projectPublic);
+export const authConfigurationError = config.error;
+export const supabase = config.error ? null : createClient(config.url, config.key);
 
 export function database() {
-    if (!supabase) throw new Error('A conexão com o banco ainda não está configurada.');
+    if (!supabase) throw new Error(authConfigurationError || 'A conexão com o banco ainda não está configurada.');
     return supabase;
 }
 
 export function accountError(error) {
-    if (error?.name === 'AuthRetryableFetchError') return 'Não foi possível conectar. Verifique sua internet e tente novamente.';
+    const authMessage = authErrorMessage(error);
+    if (authMessage) return authMessage;
     if (error?.code === '23505') return 'Esse nome de usuário ou registro já está em uso.';
     if (error?.code === '23503') return 'O jogo ou a lista não está mais disponível. Atualize a página.';
     if (error?.code === '42501') return 'Você não tem permissão para essa ação. Entre na sua conta.';
