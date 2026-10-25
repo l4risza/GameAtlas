@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolveAuthConfig } from '../src/services/auth-config.js';
 import { authErrorMessage, safeAuthDestination, confirmationRedirect, confirmationError,
-    observeAuthSession, registerWithPassword, loginWithPassword, resendSignup } from '../src/services/auth.js';
+    observeAuthSession, registerWithPassword, loginWithPassword } from '../src/services/auth.js';
 
 const shared = { url: 'https://example.supabase.co', publishableKey: 'sb_publishable_test_public_key' };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -54,20 +54,25 @@ test('retorno de confirmação usa a origem atual e informa links expirados', ()
     assert.ok(confirmationError({ search: '?error=access_denied' }));
     assert.equal(confirmationError({ hash: '#access_token=ignored' }), null);
 });
-test('cadastro envia nome e e-mail sem espaços, preservando a senha e tratando confirmação pendente', async () => {
+test('cadastro sem confirmação envia nome e e-mail sem espaços, preservando a senha e a sessão', async () => {
     let received;
-    const response = { user: { id: 'new-user' }, session: null };
+    const response = { user: { id: 'new-user' }, session: { access_token: 'fixture-token' } };
     const auth = { async signUp(input) { received = input; return { data: response, error: null }; } };
-    const data = await registerWithPassword(auth, { email: ' player@example.com ', password: ' senha com espaços ', name: ' Jogador ', origin: 'http://localhost:5173' });
+    const data = await registerWithPassword(auth, { email: ' player@example.com ', password: ' senha com espaços ', name: ' Jogador ' });
     assert.deepEqual(received, { email: 'player@example.com', password: ' senha com espaços ',
-        options: { data: { nome: 'Jogador' }, emailRedirectTo: 'http://localhost:5173/perfil' } });
-    assert.equal(data.session, null);
-    await assert.rejects(registerWithPassword(auth, { email: 'player@example.com', password: 'password', name: ' ', origin: 'http://localhost:5173' }), /nome/);
+        options: { data: { nome: 'Jogador' } } });
+    assert.equal(data, response);
+    await assert.rejects(registerWithPassword(auth, { email: 'player@example.com', password: 'password', name: ' ' }), /nome/);
+});
+test('cadastro pendente não é apresentado como conta pronta para entrar', async () => {
+    const auth = { signUp: async () => ({ data: { user: { id: 'pending-user' }, session: null }, error: null }) };
+    await assert.rejects(registerWithPassword(auth, { email: 'player@example.com', password: 'test-password', name: 'Jogador' }),
+        (error) => error.code === 'signup_confirmation_required' && /responsável/.test(authErrorMessage(error)));
 });
 test('cadastro não mostra sucesso se o Supabase falha ao enviar o e-mail', async () => {
     const error = { code: 'email_address_not_authorized' };
     await assert.rejects(registerWithPassword({ signUp: async () => ({ data: null, error }) },
-        { email: 'player@example.com', password: 'test-password', name: 'Jogador', origin: 'http://localhost:5173' }), (caught) => caught === error);
+        { email: 'player@example.com', password: 'test-password', name: 'Jogador' }), (caught) => caught === error);
     assert.match(authErrorMessage(error), /responsável/);
 });
 test('login só termina com uma sessão real e preserva senhas com espaços', async () => {
@@ -81,16 +86,9 @@ test('login só termina com uma sessão real e preserva senhas com espaços', as
 });
 test('login informa credenciais inválidas, confirmação pendente e serviço indisponível', () => {
     assert.match(authErrorMessage({ code: 'invalid_credentials' }), /incorretos/);
-    assert.match(authErrorMessage({ code: 'email_not_confirmed' }), /reenvi/i);
+    assert.match(authErrorMessage({ code: 'email_not_confirmed' }), /regularizar/);
     assert.match(authErrorMessage({ name: 'AuthRetryableFetchError' }), /Supabase está ativo/);
     assert.match(authErrorMessage({ code: 'signup_disabled' }), /desativado/);
-});
-test('reenviar confirmação reutiliza a URL do site e respeita falhas de envio', async () => {
-    let input;
-    await resendSignup({ resend: async (value) => { input = value; return { error: null }; } }, ' user@example.com ', 'http://localhost:5173');
-    assert.deepEqual(input, { type: 'signup', email: 'user@example.com', options: { emailRedirectTo: 'http://localhost:5173/perfil' } });
-    const error = { code: 'over_email_send_rate_limit' };
-    await assert.rejects(resendSignup({ resend: async () => ({ error }) }, 'user@example.com', 'http://localhost:5173'), (caught) => caught === error);
 });
 test('INITIAL_SESSION não apaga uma falha da leitura inicial', async () => {
     const fixture = authFixture(); const states = [];

@@ -1,16 +1,17 @@
 export function authErrorMessage(error) {
     const messages = {
         invalid_credentials: 'E-mail ou senha incorretos.',
-        email_not_confirmed: 'Confirme seu e-mail antes de entrar. Se não recebeu a mensagem, reenvie a confirmação abaixo.',
+        email_not_confirmed: 'Esta conta ainda está com confirmação de e-mail pendente. Peça ao responsável pelo site para regularizar o acesso.',
+        signup_confirmation_required: 'O cadastro sem confirmação de e-mail ainda precisa ser liberado pelo responsável pelo site.',
         user_already_exists: 'Este e-mail já está cadastrado. Entre na sua conta.',
         weak_password: 'Use uma senha mais forte, com pelo menos 8 caracteres.',
         email_address_invalid: 'Preencha um endereço de e-mail válido.',
-        email_address_not_authorized: 'O envio de confirmação para este e-mail ainda precisa ser liberado pelo responsável pelo site.',
+        email_address_not_authorized: 'O cadastro sem confirmação de e-mail ainda precisa ser liberado pelo responsável pelo site.',
         email_provider_disabled: 'O acesso por e-mail está desativado no projeto. Avise o responsável pelo site.',
         signup_disabled: 'O cadastro está temporariamente desativado. Avise o responsável pelo site.',
         over_email_send_rate_limit: 'O limite de envio de e-mails foi atingido. Aguarde um pouco e tente novamente.',
         over_request_rate_limit: 'Muitas tentativas. Aguarde um pouco antes de tentar novamente.',
-        otp_expired: 'O link de confirmação expirou ou já foi usado. Tente entrar ou reenvie a confirmação.',
+        otp_expired: 'O link de confirmação expirou ou já foi usado. Tente entrar com seu e-mail e senha.',
         session_expired: 'Sua sessão expirou. Entre novamente.',
         refresh_token_not_found: 'Sua sessão expirou. Entre novamente.',
         refresh_token_already_used: 'Sua sessão expirou. Entre novamente.',
@@ -21,7 +22,7 @@ export function authErrorMessage(error) {
         return 'Não foi possível acessar o serviço de login. Verifique sua internet; se continuar, avise o responsável para conferir se o Supabase está ativo.';
     if (error?.status === 429) return messages.over_request_rate_limit;
     if (error?.code === 'unexpected_failure' && /email/i.test(error.message || ''))
-        return 'Não foi possível enviar a confirmação. O responsável pelo site precisa conferir o serviço de e-mail.';
+        return 'O cadastro ainda depende de confirmação de e-mail. Avise o responsável para liberar o cadastro sem confirmação.';
     return null;
 }
 
@@ -39,7 +40,7 @@ export function confirmationRedirect(origin) { return new URL('/perfil', origin)
 export function confirmationError(location) {
     const params = [new URLSearchParams(location?.search || ''), new URLSearchParams((location?.hash || '').replace(/^#/, ''))];
     const error = params.map((param) => param.get('error_code') || param.get('error')).find(Boolean);
-    return error ? authErrorMessage({ code: error }) || 'Não foi possível confirmar o acesso. Tente entrar ou solicite outra confirmação.' : null;
+    return error ? authErrorMessage({ code: error }) || 'Não foi possível confirmar o acesso. Tente entrar com seu e-mail e senha.' : null;
 }
 
 // Eventos reais de login/saída prevalecem sobre a leitura inicial da sessão.
@@ -70,12 +71,17 @@ export function observeAuthSession(auth, onState, initialError = null, { timeout
     return () => { active = false; clearTimeout(initialTimer); subscription.unsubscribe(); };
 }
 
-export async function registerWithPassword(auth, { email, password, name, origin }) {
+export async function registerWithPassword(auth, { email, password, name }) {
     const nome = name.trim();
     if (!nome) throw new Error('Preencha seu nome de exibição.');
     const { data, error } = await auth.signUp({ email: email.trim(), password,
-        options: { data: { nome }, emailRedirectTo: confirmationRedirect(origin) } });
+        options: { data: { nome } } });
     if (error) throw error;
+    if (!data?.session) {
+        const pending = new Error(authErrorMessage({ code: 'signup_confirmation_required' }));
+        pending.code = 'signup_confirmation_required';
+        throw pending;
+    }
     return data;
 }
 
@@ -84,10 +90,4 @@ export async function loginWithPassword(auth, { email, password }) {
     if (error) throw error;
     if (!data.session) throw new Error('Não foi possível iniciar sua sessão. Tente novamente.');
     return data;
-}
-
-export async function resendSignup(auth, email, origin) {
-    const { error } = await auth.resend({ type: 'signup', email: email.trim(),
-        options: { emailRedirectTo: confirmationRedirect(origin) } });
-    if (error) throw error;
 }

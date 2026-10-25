@@ -37,7 +37,7 @@ As chaves RAWG e Supabase Secret ficam exclusivamente no servidor. Nunca coloque
 - Jogos Salvos privados, adicionados somente pela escolha do usuário.
 - Avaliações da comunidade, listas públicas e páginas pessoais com paginação.
 
-As rotas atuais usam React também ao abrir diretamente ou recarregar, preservando os HTML antigos como referência. O cadastro segue a confirmação de e-mail configurada pelo projeto Supabase. O projeto deve estar ativo, com o serviço de e-mail e os endereços de retorno configurados. Consulte o [guia de login e cadastro](docs/autenticacao.md).
+As rotas atuais usam React também ao abrir diretamente ou recarregar, preservando os HTML antigos como referência. O cadastro usa e-mail e senha com entrada direta, sem SMTP. No Supabase, o projeto precisa estar ativo e a proprietária deve desligar **Confirm email** em **Authentication > Sign In / Providers**. Enquanto essa opção estiver ligada, o cadastro ainda depende de confirmação. Consulte o [guia de login e cadastro](docs/autenticacao.md).
 
 ## Estrutura
 
