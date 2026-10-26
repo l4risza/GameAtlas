@@ -14,7 +14,7 @@ O login e o cadastro acessam o Supabase diretamente e podem ser verificados com 
 2. O Supabase cria a conta e devolve uma sessão. O site entra automaticamente e abre `/perfil`.
 3. Nos próximos acessos, usar o mesmo e-mail e senha. Não há etapa nem botão de reenvio de confirmação.
 
-**Etapa necessária no painel:** a proprietária deve abrir **Authentication > Sign In / Providers > User Signups**, manter **Allow new users to sign up** ligado, desligar **Confirm email** e clicar em **Save changes**. O projeto precisa estar ativo e o provedor Email habilitado. O perfil Developer desta sessão não permite salvar essa configuração.
+**Configuração necessária no painel:** alguém com permissão de administrar a autenticação deve abrir **Authentication > Sign In / Providers > User Signups**, manter **Allow new users to sign up** ligado, desligar **Confirm email** e clicar em **Save changes**. O projeto precisa estar ativo e o provedor Email habilitado. Essa configuração foi conferida no projeto GameAtlas em 26/10/2026 e já estava aplicada.
 
 Desligar a confirmação é uma configuração do Supabase; alterar somente o front-end não muda essa exigência. Enquanto ela continuar ativa, o cadastro pode falhar no envio ou retornar uma conta pendente sem sessão. O site informa essa pendência, sem tratar o cadastro como concluído. A entrada direta é o comportamento oficial do `signUp` quando **Confirm email** está desativado. [Referência do Supabase](https://supabase.com/docs/reference/javascript/auth-signup).
 
@@ -44,8 +44,12 @@ Os testes de regressão incluem o cliente oficial do Supabase com transporte sim
 
 Com `SUPABASE_URL` e `SUPABASE_SECRET_KEY` do mesmo projeto disponíveis apenas no ambiente do servidor, executar `node --use-system-ca scripts/test-auth-live.mjs`. Antes de criar qualquer conta, esse teste confere se **Confirm email** está desligado. Se estiver ligado, encerra com orientação, sem solicitar e-mail nem criar uma conta. Depois de liberado o fluxo, usa o cadastro público normal, verifica a sessão imediata, saída e novo login e remove a conta temporária. A chave privada serve somente para remover essa conta de teste; não é usada para cadastrar nem confirmar usuários.
 
-### Situação verificada em 25/10/2026
+### Situação verificada em 26/10/2026
 
-O projeto estava pausado e voltou a responder após a retomada feita pela proprietária. O login real, a restauração de sessão e a saída já foram verificados com conta temporária, removida ao final.
+O projeto está ativo, com cadastro por e-mail habilitado e **Confirm email** desligado. O cadastro público normal devolveu uma sessão imediatamente, sem depender de SMTP nem de confirmação por e-mail.
 
-O fluxo foi ajustado para cadastro com entrada direta, sem SMTP. Os 19 testes de autenticação e a compilação passaram. A confirmação de e-mail ainda estava ativa no serviço na última verificação; falta a proprietária desligar **Confirm email** para permitir validar esse cadastro no projeto real. Os testes simulados desse modo não substituem essa validação.
+O script `scripts/test-auth-live.mjs` passou contra o Supabase real: cadastro com entrada direta, saída, rejeição de senha incorreta, novo login, leitura da sessão e do usuário e saída final. A conta temporária foi removida.
+
+Também foram testados pelo navegador os formulários de cadastro e login: criação de conta com abertura automática de `/perfil`, saída, novo login e recarregamento da página mantendo a sessão. A conta usada nesse teste e o arquivo local com suas credenciais foram removidos. Não foram alterados jogos, listas ou avaliações.
+
+Os 19 testes automatizados de autenticação e a compilação já haviam passado na atualização do código de 25/10/2026. A validação real de 26/10/2026 confirmou o funcionamento desse mesmo código com a configuração atual do Supabase.
