@@ -6,7 +6,7 @@ import { defineConfig, loadEnv } from 'vite'
 function reactPages() {
   const mount = (server) => { server.middlewares.use((req, _res, next) => {
     const pathname = new URL(req.url, 'http://localhost').pathname
-    if (/^\/(explorar|reviews|listas|perfil|login|cadastro|jogos-salvos|jogo)(\/|$)/.test(pathname)
+    if (/^\/(explorar|reviews|listas|perfil|login|cadastro|jogos-salvos|jogo|configuracoes|esqueci-senha|redefinir-senha)(\/|$)/.test(pathname)
       && req.headers.accept?.includes('text/html')) req.url = '/index.html'
     next()
   }) }

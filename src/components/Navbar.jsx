@@ -14,7 +14,7 @@ export default function Navbar({
     ],
     // ---- estado de autenticação ----
     perfilHref = '/perfil',
-    configHref = '/perfil',
+    configHref = '/configuracoes',
     // ---- customização de estilo (viram CSS variables usadas em components.css) ----
     fontFamily,
     fontSize,

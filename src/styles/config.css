@@ -1,0 +1,92 @@
+/* Página de configurações (/configuracoes). Segue os protótipos de Perfil e Conta. */
+.config-card { margin-top: 1rem; padding: clamp(1rem, 2.5vw, 2rem); background: var(--color-header-bg);
+    border: 1px solid var(--color-accent-dark); border-radius: 20px; box-shadow: 0 0 18px rgba(147, 51, 234, 0.15); }
+
+.config-tabs { display: flex; justify-content: space-between; gap: 1rem; overflow-x: auto; margin-bottom: 1.6rem;
+    border-bottom: 1px solid var(--color-accent-dark); }
+.config-tab { padding: 0.5rem 0.6rem 0.8rem; background: none; border: 0; color: var(--color-text); cursor: pointer;
+    font: inherit; font-size: clamp(0.95rem, 0.8rem + 0.6vw, 1.35rem); text-transform: uppercase; white-space: nowrap; }
+.config-tab:hover { color: var(--color-accent); }
+.config-tab[aria-selected="true"] { font-weight: 700; text-decoration: underline; text-underline-offset: 8px; }
+.config-tab:focus-visible, .config-btn:focus-visible, .config-icon-btn:focus-visible, .config-add-btn:focus-visible,
+.config-order:focus-visible, .config-switch__track:focus-visible, .config-pill__remove:focus-visible,
+.config-input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.config-section-title { margin: 0 0 1rem; font-size: 1.3rem; font-weight: 700; text-transform: uppercase; }
+.config-divider { margin: 1.6rem 0; }
+
+.config-row { display: grid; grid-template-columns: minmax(150px, 230px) 1fr; align-items: center; gap: 0.5rem 1.2rem; margin: 0 0 1.1rem; }
+.config-label { font-weight: 700; text-transform: uppercase; }
+.config-label--light { font-weight: 400; }
+.config-field { display: flex; align-items: flex-start; gap: 0.6rem; min-width: 0; }
+.config-field--wrap { flex-wrap: wrap; align-items: center; }
+
+.config-input { flex: 1; width: 100%; min-width: 0; padding: 0.55rem 0.75rem; background: var(--color-input-bg);
+    color: var(--color-text); border: 1px solid var(--color-accent-dark); border-radius: 6px; font: inherit; }
+.config-input[readonly] { cursor: default; }
+.config-input--auto { flex: 0 0 auto; width: auto; }
+textarea.config-input { resize: vertical; }
+
+.config-btn { padding: 0.55rem 1.2rem; background: var(--color-accent-dark); color: #fff; border: 1px solid var(--color-accent-dark);
+    border-radius: 8px; cursor: pointer; font: inherit; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+.config-btn:hover:not(:disabled) { background: var(--color-accent); border-color: var(--color-accent); }
+.config-btn--outline { background: transparent; color: var(--color-text); }
+.config-btn:disabled, .config-icon-btn:disabled, .config-add-btn:disabled, .config-order:disabled { opacity: 0.45; cursor: default; }
+.config-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 0.4rem 0; }
+
+.config-icon-btn { padding: 0.3rem; background: none; border: 0; color: var(--color-accent-dark); cursor: pointer; font-size: 1.25rem; line-height: 1; }
+.config-icon-btn:hover:not(:disabled) { color: var(--color-accent); }
+.config-icon-btn--muted { color: var(--color-muted); }
+
+.config-avatar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; margin: 0 0 1.6rem; }
+.config-avatar { width: 130px; height: 130px; border: 1px solid var(--color-accent-dark); border-radius: 50%;
+    background: var(--color-input-bg); object-fit: cover; }
+
+.config-pills { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+.config-pill { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.4rem 0.3rem 0.9rem;
+    background: var(--color-input-bg); border: 1px solid var(--color-accent-dark); border-radius: 999px; }
+.config-pill a { color: inherit; text-decoration: none; }
+.config-pill__remove { padding: 0 0.2rem; background: none; border: 0; color: var(--color-muted); cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.config-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 1.9rem; height: 1.9rem; padding: 0;
+    background: var(--color-accent-dark); color: #fff; border: 0; border-radius: 50%; cursor: pointer; }
+.config-inline-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; grid-column: 1 / -1; }
+.config-inline-form .config-input { flex: 1 1 200px; }
+
+.config-prefs { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 3rem; }
+.config-switch { display: inline-flex; align-items: center; gap: 0.8rem; text-transform: uppercase; }
+.config-switch__track { position: relative; width: 52px; height: 28px; padding: 0; background: var(--color-bg);
+    border: 1px solid var(--color-accent-dark); border-radius: 999px; cursor: pointer; transition: background 0.2s; }
+.config-switch__track[aria-checked="true"] { background: var(--color-accent-dark); }
+.config-switch__knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: var(--color-input-bg);
+    border-radius: 50%; transition: transform 0.2s; }
+.config-switch__track[aria-checked="true"] .config-switch__knob { transform: translateX(24px); }
+.config-switch__track:disabled { opacity: 0.45; cursor: default; }
+.config-order-group { display: inline-flex; align-items: center; gap: 0.6rem; text-transform: uppercase; }
+.config-order { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0; background: none; border: 0;
+    color: var(--color-text); cursor: pointer; font: inherit; font-size: 0.85rem; text-transform: uppercase; }
+.config-order i { color: var(--color-accent-dark); font-size: 1.4rem; }
+
+.config-error { grid-column: 1 / -1; margin: 0.2rem 0 0.8rem; color: #ffb8bc; }
+.config-status { grid-column: 1 / -1; min-height: 1.4em; margin: 0.2rem 0 0.8rem; color: var(--color-muted); }
+.config-hint { margin: 0.2rem 0 1rem; color: var(--color-muted); font-size: 0.9rem; }
+.config-empty { padding: 2rem 0; text-align: center; color: var(--color-muted); }
+
+@media (max-width: 700px) {
+    .config-row { grid-template-columns: 1fr; }
+    .config-avatar { width: 100px; height: 100px; }
+}
+
+/* aba Sobre e link "Esqueci minha senha" */
+.config-text { margin: 0 0 1rem; line-height: 1.6; }
+.config-text a, .config-about a { color: var(--color-accent); }
+.config-about { display: grid; gap: 0.6rem; margin: 0; }
+.config-about__row { display: grid; grid-template-columns: minmax(150px, 230px) 1fr; gap: 0.3rem 1.2rem; }
+.config-about dt { font-weight: 700; text-transform: uppercase; }
+.config-about dd { margin: 0; }
+.config-placeholder { color: var(--color-muted); font-style: italic; }
+.config-link { padding: 0; background: none; border: 0; color: var(--color-muted); cursor: pointer; font: inherit;
+    font-size: 0.9rem; text-decoration: underline; }
+.config-link:hover:not(:disabled) { color: var(--color-accent); }
+.config-link:disabled { opacity: 0.5; cursor: default; }
+.config-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (max-width: 700px) { .config-about__row { grid-template-columns: 1fr; } }
