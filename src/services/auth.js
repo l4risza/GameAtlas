@@ -1,6 +1,6 @@
 export function authErrorMessage(error) {
     const messages = {
-        invalid_credentials: 'E-mail ou senha incorretos.',
+        invalid_credentials: 'E-mail, usuário ou senha incorretos.',
         email_not_confirmed: 'Esta conta ainda está com confirmação de e-mail pendente. Peça ao responsável pelo site para regularizar o acesso.',
         signup_confirmation_required: 'O cadastro sem confirmação de e-mail ainda precisa ser liberado pelo responsável pelo site.',
         user_already_exists: 'Este e-mail já está cadastrado. Entre na sua conta.',
@@ -21,6 +21,9 @@ export function authErrorMessage(error) {
     if (error?.name === 'AuthRetryableFetchError')
         return 'Não foi possível acessar o serviço de login. Verifique sua internet; se continuar, avise o responsável para conferir se o Supabase está ativo.';
     if (error?.status === 429) return messages.over_request_rate_limit;
+    // O trigger do banco recusa nome de usuário repetido ou inválido; o Supabase só devolve esta mensagem genérica.
+    if (/database error saving new user/i.test(error?.message || ''))
+        return 'Não foi possível criar a conta. O nome de usuário pode já estar em uso; tente outro.';
     if (error?.code === 'unexpected_failure' && /email/i.test(error.message || ''))
         return 'O cadastro ainda depende de confirmação de e-mail. Avise o responsável para liberar o cadastro sem confirmação.';
     return null;
@@ -71,17 +74,32 @@ export function observeAuthSession(auth, onState, initialError = null, { timeout
     return () => { active = false; clearTimeout(initialTimer); subscription.unsubscribe(); };
 }
 
-export async function registerWithPassword(auth, { email, password, name }) {
-    const nome = name.trim();
-    if (!nome) throw new Error('Preencha seu nome de exibição.');
+// "username" é o nome de usuário único (o banco recusa repetidos). O nome de exibição começa igual a ele
+// e pode ser trocado depois em Configurações. "name" continua aceito para quem só informa o nome.
+export async function registerWithPassword(auth, { email, password, username, name }) {
+    const user = String(username ?? '').trim();
+    const nome = String(name ?? username ?? '').trim();
+    if (!nome) throw new Error('Preencha seu nome de usuário.');
     const { data, error } = await auth.signUp({ email: email.trim(), password,
-        options: { data: { nome } } });
+        options: { data: { nome, ...(user && { username: user }) } } });
     if (error) throw error;
     if (!data?.session) {
         const pending = new Error(authErrorMessage({ code: 'signup_confirmation_required' }));
         pending.code = 'signup_confirmation_required';
         throw pending;
     }
+    return data;
+}
+
+// Entra com e-mail ou nome de usuário. E-mail vai direto ao Supabase; nome de usuário passa pelo backend,
+// que descobre o e-mail sem entregá-lo ao navegador. "request" é a função requestJson (injetada para facilitar testes).
+export async function loginWithIdentifier(auth, { identifier, password }, request) {
+    const id = String(identifier ?? '').trim();
+    if (id.includes('@')) return loginWithPassword(auth, { email: id, password });
+    const tokens = await request('/auth/entrar', { method: 'POST', body: { identificador: id, senha: password } });
+    const { data, error } = await auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
+    if (error) throw error;
+    if (!data?.session) throw new Error('Não foi possível iniciar sua sessão. Tente novamente.');
     return data;
 }
 

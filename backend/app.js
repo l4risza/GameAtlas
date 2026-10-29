@@ -16,6 +16,12 @@ export function createApp({ rawg, supabaseService, corsOrigins = [] }) {
         res.json(await supabaseService.linkGame(req.get('authorization'), id, rawg));
     });
 
+    // Em produção, atrás de proxy, configure app.set('trust proxy', ...) para o limite de tentativas enxergar o IP real.
+    app.post('/api/auth/entrar', express.json({ limit: '2kb' }), async (req, res) => {
+        if (!supabaseService) throw new ApiError(503, 'DATABASE_NOT_CONFIGURED', 'A conexão com o banco ainda não está configurada.');
+        res.json(await supabaseService.loginWithUsername(req.ip, req.body));
+    });
+
     app.get('/api/jogos', async (req, res) => {
         res.json(await rawg.listGames(req.query.search ? searchQuery(req.query) : listQuery(req.query)));
     });
@@ -51,6 +57,9 @@ export function createApp({ rawg, supabaseService, corsOrigins = [] }) {
     app.use((_req, res) => res.status(404).json({ erro: 'Rota não encontrada.', code: 'NOT_FOUND' }));
     app.use((error, _req, res, next) => {
         if (res.headersSent) return next(error);
+        if (error?.type === 'entity.parse.failed' || error?.type === 'entity.too.large') {
+            return res.status(400).json({ erro: 'Dados inválidos.', code: 'INVALID_BODY' });
+        }
         const known = error instanceof ApiError;
         res.status(known ? error.status : 500).json({
             erro: known ? error.message : 'Erro interno ao processar a solicitação.',

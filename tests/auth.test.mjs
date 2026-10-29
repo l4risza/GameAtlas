@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolveAuthConfig } from '../src/services/auth-config.js';
 import { authErrorMessage, safeAuthDestination, confirmationRedirect, confirmationError,
-    observeAuthSession, registerWithPassword, loginWithPassword } from '../src/services/auth.js';
+    observeAuthSession, registerWithPassword, loginWithPassword, loginWithIdentifier } from '../src/services/auth.js';
 
 const shared = { url: 'https://example.supabase.co', publishableKey: 'sb_publishable_test_public_key' };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -128,4 +128,34 @@ test('leitura de sessão que nunca responde não deixa o botão Entrar bloqueado
     await new Promise((resolve) => setTimeout(resolve, 15));
     assert.equal(states[0].loading, false); assert.match(states[0].error, /demorou/);
     stop();
+});
+
+test('cadastro com nome de usuário envia username e usa o mesmo valor como nome de exibição inicial', async () => {
+    let received;
+    const auth = { async signUp(input) { received = input; return { data: { user: { id: 'u' }, session: { access_token: 't' } }, error: null }; } };
+    await registerWithPassword(auth, { email: 'ana@example.com', password: 'senha-forte', username: ' Ana_01 ' });
+    assert.deepEqual(received, { email: 'ana@example.com', password: 'senha-forte', options: { data: { nome: 'Ana_01', username: 'Ana_01' } } });
+    await assert.rejects(registerWithPassword(auth, { email: 'ana@example.com', password: 'senha-forte', username: '  ' }), /nome de usuário/);
+});
+test('erro genérico do banco no cadastro vira aviso de nome de usuário repetido', () => {
+    assert.match(authErrorMessage({ message: 'Database error saving new user' }), /nome de usuário/);
+});
+test('login com e-mail vai direto ao Supabase e com nome de usuário passa pelo backend', async () => {
+    const calls = [];
+    const session = { access_token: 'a', refresh_token: 'r', user: { id: 'u' } };
+    const auth = {
+        async signInWithPassword(input) { calls.push(['signIn', input]); return { data: { session }, error: null }; },
+        async setSession(input) { calls.push(['setSession', input]); return { data: { session }, error: null }; },
+    };
+    const request = async (path, options) => { calls.push(['request', path, options]); return { access_token: 'a', refresh_token: 'r' }; };
+    await loginWithIdentifier(auth, { identifier: ' ana@example.com ', password: 'p' }, request);
+    assert.deepEqual(calls, [['signIn', { email: 'ana@example.com', password: 'p' }]]);
+    calls.length = 0;
+    await loginWithIdentifier(auth, { identifier: ' Ana_01 ', password: ' p ' }, request);
+    assert.deepEqual(calls, [
+        ['request', '/auth/entrar', { method: 'POST', body: { identificador: 'Ana_01', senha: ' p ' } }],
+        ['setSession', { access_token: 'a', refresh_token: 'r' }],
+    ]);
+    await assert.rejects(loginWithIdentifier(auth, { identifier: 'ana_01', password: 'p' }, async () => { throw new Error('E-mail, usuário ou senha incorretos.'); }), /incorretos/);
+    await assert.rejects(loginWithIdentifier({ setSession: async () => ({ data: { session: null }, error: null }) }, { identifier: 'ana_01', password: 'p' }, request), /sessão/);
 });

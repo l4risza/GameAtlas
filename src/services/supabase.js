@@ -19,7 +19,7 @@ export function accountError(error) {
     if (error?.code === '23503') return 'O jogo ou a lista não está mais disponível. Atualize a página.';
     if (error?.code === '42501') return 'Você não tem permissão para essa ação. Entre na sua conta.';
     if (error?.code === '23514') return 'Confira os dados preenchidos e a nota de 1 a 5.';
-    if (error?.code === 'invalid_credentials') return 'E-mail ou senha incorretos.';
+    if (error?.code === 'invalid_credentials') return 'E-mail, usuário ou senha incorretos.';
     if (error?.code === 'email_not_confirmed') return 'Confirme seu e-mail antes de entrar.';
     if (error?.code === 'user_already_exists') return 'Este e-mail já está cadastrado. Entre na sua conta.';
     if (error?.code === 'over_email_send_rate_limit' || error?.status === 429) return 'Aguarde um pouco antes de tentar novamente.';
