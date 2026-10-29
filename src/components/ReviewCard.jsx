@@ -11,7 +11,7 @@ function Stars({ rating, max = 5 }) {
     );
 }
 
-export default function ReviewCard({ review }) {
+export default function ReviewCard({ review, showAuthor = true }) {
     return (
         <article className="review-card">
             <div className="review-card-thumb">
@@ -24,7 +24,7 @@ export default function ReviewCard({ review }) {
                     <span>{review.date}</span>
                 </div>
                 <Stars rating={review.rating} />
-                <p>{review.author}</p>
+                {showAuthor && <p>{review.author}</p>}
                 {review.text && <p className="review-card-text">{review.text}</p>}
             </div>
         </article>

@@ -1,22 +1,21 @@
 import '../styles/components.css';
 
-export default function ProfileTabs({ active, onChange }) {
+const LABELS = { reviews: 'REVIEWS', listas: 'LISTAS' };
+
+// "tabs" permite esconder uma aba (escolha feita em Configurações > Mostrar no perfil).
+export default function ProfileTabs({ active, onChange, tabs = ['reviews', 'listas'] }) {
     return (
         <div className="profile-tabs">
-            <button
-                type="button"
-                className={`profile-tab${active === 'reviews' ? ' active' : ''}`}
-                onClick={() => onChange('reviews')}
-            >
-                REVIEWS
-            </button>
-            <button
-                type="button"
-                className={`profile-tab${active === 'listas' ? ' active' : ''}`}
-                onClick={() => onChange('listas')}
-            >
-                LISTAS
-            </button>
+            {tabs.map((key) => (
+                <button
+                    key={key}
+                    type="button"
+                    className={`profile-tab${active === key ? ' active' : ''}`}
+                    onClick={() => onChange(key)}
+                >
+                    {LABELS[key]}
+                </button>
+            ))}
         </div>
     );
 }

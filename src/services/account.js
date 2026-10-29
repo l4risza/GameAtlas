@@ -10,19 +10,19 @@ export const reviewView = (row) => ({ id: row.id, userId: row.usuario_id, rawgId
     author: row.perfis?.username ? `@${row.perfis.username}` : row.perfis?.nome || 'Jogador',
     date: new Date(row.atualizado_em).toLocaleDateString('pt-BR') });
 
-export async function loadReviews(page = 1, userId, rawgId) {
+export async function loadReviews(page = 1, userId, rawgId, order = 'recentes') {
     let query = database().from('reviews').select(REVIEW_COLUMNS, { count: 'exact' });
     if (userId) query = query.eq('usuario_id', userId);
     if (rawgId) query = query.eq('jogos.rawg_id', rawgId);
-    const { data, count } = await resultOf(query.order('atualizado_em', { ascending: false })
+    const { data, count } = await resultOf(query.order('atualizado_em', { ascending: order === 'antigas' })
         .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1));
     return { items: data.map(reviewView), count };
 }
 
-export async function loadLists(page = 1, userId) {
+export async function loadLists(page = 1, userId, order = 'recentes') {
     let query = database().from('listas').select('id,usuario_id,nome,descricao,publica,perfis(nome,username)', { count: 'exact' });
     query = userId ? query.eq('usuario_id', userId) : query.eq('publica', true);
-    const { data, count } = await resultOf(query.order('criado_em', { ascending: false })
+    const { data, count } = await resultOf(query.order('criado_em', { ascending: order === 'antigas' })
         .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1));
     return { items: data, count };
 }

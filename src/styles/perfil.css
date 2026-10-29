@@ -1,0 +1,10 @@
+/* Ajustes da página /perfil (dados vindos do banco). O desenho base continua em components.css. */
+.profile-socials { align-items: center; flex-wrap: wrap; }
+.profile-edit { gap: 0.5rem; }
+.profile-texto--empty { color: var(--color-muted); }
+.profile-page p a { color: var(--color-accent); }
+
+/* account.css soma 1rem de margem nos cards; aqui o espaçamento vem só do gap do desenho original */
+.profile-content .review-card { margin-bottom: 0; }
+.profile-content .review-card-title a { color: inherit; }
+.review-card--list { grid-template-columns: 1fr; }
