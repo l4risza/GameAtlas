@@ -1,0 +1,3 @@
+/* Recuperação de senha: link do login e páginas /esqueci-senha e /redefinir-senha. */
+.auth-forgot { margin: -0.4rem 0 0; text-align: right; font-size: 0.9rem; }
+.auth-form small { color: var(--color-muted); }

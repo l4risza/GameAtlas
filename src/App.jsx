@@ -4,9 +4,12 @@ import Explorar from './pages/Explorar';
 import Reviews from './pages/Reviews';
 import Listas from './pages/Listas';    
 import Perfil from './pages/Perfil';
+import Configuracoes from './pages/Configuracoes';
 import Jogo from './pages/Jogo';
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import EsqueciSenha from './pages/EsqueciSenha';
+import RedefinirSenha from './pages/RedefinirSenha';
 import JogosSalvos from './pages/JogosSalvos';
 import ListaDetalhes from './pages/ListaDetalhes';
 
@@ -30,7 +33,10 @@ function App() {
             <Route path="/jogos-salvos" element={<JogosSalvos />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+            <Route path="/redefinir-senha" element={<RedefinirSenha />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/jogo/:id" element={<Jogo />} />
             <Route path="*" element={<Placeholder titulo="Página não encontrada" />} />
         </Routes>
