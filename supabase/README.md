@@ -12,6 +12,9 @@ Estrutura inicial para Supabase/PostgreSQL. A autenticação usa `auth.users`, g
 | `listas` | Listas criadas pelo usuário. `publica=false` por padrão; dono pode mudar a visibilidade. |
 | `lista_jogos` | Jogos em cada lista, sem duplicatas. Visibilidade segue a lista. |
 | `jogos_salvos` | Jogos que o usuário escolheu salvar, sem duplicatas e visíveis somente a ele. |
+| `review_curtidas` | Uma curtida por usuário/review; contagem usada na ordenação por popularidade. |
+
+As migrações de configurações, username e contas foram aplicadas no GameAtlas em 30/10/2026. Consulte [a entrega de back-end e banco](../docs/backend-contas.md) para a ordem das migrações, APIs, testes e integrações que a equipe de front-end ainda precisa conectar. O perfil também contém favoritos textuais, redes sociais, preferências e estado de desativação.
 
 Avaliar um jogo ou adicioná-lo a uma lista **não** o inclui em Jogos Salvos. Remover de Jogos Salvos não remove avaliações nem jogos das listas. O usuário pode criar uma lista chamada “Favoritos”, como qualquer outra lista.
 
@@ -43,9 +46,7 @@ Ao salvar, avaliar ou adicionar um jogo a uma lista:
 
 ### Confirmação do cadastro
 
-No painel Authentication > URL Configuration, a proprietária deve configurar `Site URL` como `http://localhost:5173` e adicionar `http://localhost:5173/perfil` em `Redirect URLs`. Para acessar por `127.0.0.1`, adicionar também `http://127.0.0.1:5173/perfil`. Na publicação, cadastrar o domínio real do front-end. O aplicativo envia a URL de retorno da origem em que está aberto.
-
-Em 09/10/2026, o painel ainda apontava para `http://localhost:3000`, sem Redirect URLs. O perfil de Desenvolvedor desta sessão não permitia editar esses campos; o usuário ficou de pedir o ajuste à proprietária. A confirmação permanece ativa. O link confirma o e-mail no Supabase antes do retorno; até corrigir a URL, se o retorno não abrir o site, o usuário pode voltar a `http://localhost:5173/login` e entrar após a confirmação. A entrega do e-mail depende da configuração do Supabase; não foi disparado e-mail de teste.
+O cadastro atual entra diretamente, com **Confirm email** desativado. Em 30/10/2026, o Site URL foi corrigido para `http://localhost:5173`, e os retornos de perfil, configurações e redefinição de senha foram adicionados. Na publicação, cadastrar o domínio real do front-end. Troca de e-mail e recuperação de senha ainda dependem de SMTP; veja o [guia da entrega](../docs/backend-contas.md).
 
 ### Teste de integração real
 
@@ -53,7 +54,7 @@ Com `npm run dev` ligado, executar `node --use-system-ca backend/scripts/test-su
 
 Depois de `npm run build`, `node --use-system-ca backend/scripts/verify-connection.mjs` verifica as contagens, a configuração de cadastro/confirmacão e a ausência das chaves privadas no pacote React, sem gravar dados. Executar os comandos na raiz do projeto.
 
-Nos inserts do cliente, `usuario_id` pode ser omitido: o padrão é `auth.uid()`. Atualizações aceitam apenas colunas editáveis, sem trocar dono, jogo ou timestamps. `username` começa vazio para não impedir o cadastro por colisão e pode ser preenchido depois no perfil.
+Nos inserts do cliente, `usuario_id` pode ser omitido: o padrão é `auth.uid()`. Atualizações aceitam apenas colunas editáveis, sem trocar dono, jogo ou timestamps. Desde a migração de contas, `username` é obrigatório no cadastro e não pode ser removido do perfil. O índice único sem distinção de maiúsculas impede colisões, inclusive simultâneas.
 
 Para mudar a escala da nota futuramente, será necessária uma migração da restrição `reviews_nota_1_a_5`, conversão das notas existentes e atualização dos formulários. A nota do usuário é independente da nota retornada pela RAWG.
 

@@ -25,7 +25,7 @@ async function account() {
     const password = randomBytes(24).toString('base64url');
     const email = `gameatlas-test-${randomUUID()}@example.com`;
     const { data } = await result(admin.auth.admin.createUser({ email, password, email_confirm: true,
-        user_metadata: { nome: 'Teste de integração GameAtlas' } }));
+        user_metadata: { nome: 'Teste de integração GameAtlas', username: 'teste_'+randomUUID().replaceAll('-','').slice(0,20) } }));
     users.push(data.user.id);
     const client = createClient(config.supabaseUrl, config.supabasePublishableKey, options);
     const login = await result(client.auth.signInWithPassword({ email, password }));

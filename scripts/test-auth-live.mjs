@@ -40,7 +40,7 @@ try {
         const result = await client.auth.signUp(input);
         userId = result.data.user?.id;
         return result;
-    } }, { email, password, name: 'Teste temporário de autenticação' });
+    } }, { email, password, username: 'teste_'+randomUUID().replaceAll('-','').slice(0,20), name: 'Teste temporário de autenticação' });
     assert.ok(userId);
     assert.equal(signup.session.user.id, userId);
     assert.equal((await client.auth.getSession()).data.session.user.id, userId);
