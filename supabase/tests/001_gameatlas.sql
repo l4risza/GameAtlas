@@ -8,8 +8,8 @@ select set_config('gameatlas.test_owner', gen_random_uuid()::text, true),
        set_config('gameatlas.test_public', gen_random_uuid()::text, true);
 
 insert into auth.users (id, raw_user_meta_data) values
-  (current_setting('gameatlas.test_owner')::uuid, '{"nome":"Teste GameAtlas A"}'),
-  (current_setting('gameatlas.test_other')::uuid, '{"nome":"Teste GameAtlas B"}');
+  (current_setting('gameatlas.test_owner')::uuid, jsonb_build_object('nome','Teste GameAtlas A','username','teste_'||left(replace(current_setting('gameatlas.test_owner'),'-',''),20))),
+  (current_setting('gameatlas.test_other')::uuid, jsonb_build_object('nome','Teste GameAtlas B','username','teste_'||left(replace(current_setting('gameatlas.test_other'),'-',''),20)));
 
 do $$
 declare g bigint;

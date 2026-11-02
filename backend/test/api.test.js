@@ -58,7 +58,8 @@ test('detalhes consultam diretamente o ID, inclusive fora da primeira página', 
     const data = await (await get('/api/jogos/3498')).json();
     assert.equal(data.description, GAME.description_raw);
     assert.equal(calls[0].pathname, '/api/games/3498');
-    assert.equal(calls.length, 1);
+    assert.deepEqual(calls.map((url) => url.pathname).sort(),
+        ['/api/games/3498', '/api/games/3498/movies', '/api/games/3498/screenshots']);
 });
 
 for (const path of [

@@ -1,0 +1,254 @@
+/* Página /reviews (feed). Carregado depois do account.css. */
+.reviews-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 250px;
+    z-index: 0;
+    background: linear-gradient(180deg, #4b1a7d 0%, #3a1366 70%, #2f0f55 100%);
+    border-bottom: 1px solid rgba(179, 158, 181, .35);
+    box-shadow: 0 8px 30px rgba(147, 51, 234, .25);
+}
+
+.reviews-wrap {
+    position: relative;
+    z-index: 1;
+}
+
+.reviews-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px;
+    margin-bottom: 18px;
+}
+
+.account-page .reviews-tabs a {
+    color: #E9D5FF;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 2px;
+    border-bottom: 2px solid transparent;
+    transition: color .2s ease, border-color .2s ease, text-shadow .2s ease;
+}
+
+.account-page .reviews-tabs a:hover {
+    color: #fff;
+    border-bottom-color: #B39EB5;
+}
+
+.account-page .reviews-tabs a.active {
+    color: #fff;
+    border-bottom-color: #fff;
+    text-shadow: 0 0 12px rgba(255, 255, 255, .45);
+}
+
+.reviews-panel {
+    min-height: 480px;
+    padding: 1.4rem 2rem 2rem;
+    border: 1px solid #7c3aed;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #140a28 0%, #0f0820 100%);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .45);
+}
+
+.reviews-title {
+    margin: 0;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 400;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--color-text);
+}
+
+.reviews-sub {
+    margin: .3rem 0 0;
+    text-align: center;
+    color: var(--color-muted);
+}
+
+.reviews-panel hr {
+    margin: .9rem 0 1.2rem;
+    border: 0;
+    border-top: 1px solid #7c3aed;
+    opacity: 1;
+}
+
+.reviews-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 1050px;
+    margin: 0 auto 1.1rem;
+}
+
+.reviews-toolbar .account-order {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.reviews-toolbar .account-select {
+    width: auto;
+}
+
+.feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.3rem;
+    max-width: 1050px;
+    margin: 0 auto;
+}
+
+.feed-card {
+    position: relative;
+    padding: 1rem 1.3rem;
+    border: 1px solid #7c3aed;
+    border-radius: 16px;
+    background: #1d1033;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.feed-card:hover {
+    border-color: #a855f7;
+    box-shadow: 0 0 18px rgba(147, 51, 234, .35);
+    transform: translateY(-2px);
+}
+
+.feed-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+}
+
+.feed-avatar {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #7c3aed;
+    background: #140a28;
+}
+
+.feed-who {
+    flex: 1;
+    min-width: 0;
+}
+
+.feed-name {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.feed-user {
+    margin-left: .5rem;
+    font-size: .75rem;
+    font-weight: 400;
+    text-transform: none;
+    color: var(--color-muted);
+}
+
+.feed-who .review-stars {
+    margin-top: .2rem;
+}
+
+.feed-date {
+    color: #ddd;
+    font-size: .95rem;
+    white-space: nowrap;
+}
+
+.feed-text {
+    margin: .7rem 0 .2rem;
+    color: #eee;
+    line-height: 1.55;
+    white-space: pre-line;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+
+.feed-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    margin-top: .8rem;
+    padding-top: .7rem;
+    border-top: 1px solid rgba(147, 51, 234, .25);
+}
+
+.account-page .feed-game {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-muted);
+}
+
+.account-page .feed-game:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.feed-game img {
+    width: 48px;
+    height: 28px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.account-page .feed-more {
+    font-size: .9rem;
+    text-decoration: none;
+    color: #E9D5FF;
+}
+
+.account-page .feed-more:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* card inteiro clicável */
+.feed-more::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+}
+
+@media (max-width: 650px) {
+    .reviews-panel {
+        padding: 1rem;
+        border-radius: 16px;
+    }
+
+    .feed-avatar {
+        width: 48px;
+        height: 48px;
+    }
+
+    .feed-card-head {
+        flex-wrap: wrap;
+    }
+
+    .feed-date {
+        width: 100%;
+    }
+}

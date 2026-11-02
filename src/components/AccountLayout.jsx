@@ -10,7 +10,7 @@ export default function AccountLayout({ title, children, requireLogin = false })
     if (requireLogin && configured && !loading && !user) {
         return <Navigate to={`/login?voltar=${encodeURIComponent(location.pathname + location.search)}`} replace />;
     }
-    return <><Navbar /><main className="account-page"><h1>{title}</h1>
+    return <><Navbar /><main className="account-page">{title && <h1>{title}</h1>}
         {!configured ? <p role="alert">{authError || 'A conexão com o banco ainda não está configurada.'}</p>
             : requireLogin && loading ? <p role="status">Carregando sua conta...</p> : children}
     </main><Footer /></>;

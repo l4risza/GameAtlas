@@ -3,10 +3,14 @@ import cors from 'cors';
 import { ApiError } from './errors.js';
 import { gameId, integer, invalid, listQuery, searchQuery, text } from './validation.js';
 
-export function createApp({ rawg, supabaseService, corsOrigins = [] }) {
+export function createApp({ rawg, supabaseService, accountService, corsOrigins = [] }) {
     const app = express();
     app.disable('x-powered-by');
     app.use(cors({ origin: corsOrigins }));
+    app.use(['/api/auth', '/api/conta', '/api/perfis', '/api/reviews', '/api/usuarios'], (_req, res, next) => {
+        res.set('Cache-Control', 'no-store');
+        next();
+    });
 
     app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'GameAtlas API' }));
 
@@ -20,6 +24,23 @@ export function createApp({ rawg, supabaseService, corsOrigins = [] }) {
     app.post('/api/auth/entrar', express.json({ limit: '2kb' }), async (req, res) => {
         if (!supabaseService) throw new ApiError(503, 'DATABASE_NOT_CONFIGURED', 'A conexão com o banco ainda não está configurada.');
         res.json(await supabaseService.loginWithUsername(req.ip, req.body));
+    });
+
+    const accounts = () => {
+        if (!accountService) throw new ApiError(503, 'DATABASE_NOT_CONFIGURED', 'A conexão com o banco ainda não está configurada.');
+        return accountService;
+    };
+    app.get('/api/usuarios/disponibilidade', async (req, res) => {
+        res.json(await accounts().usernameAvailable(req.query.username));
+    });
+    for (const kind of ['reviews','listas']) app.get(`/api/perfis/:id/${kind}`, async (req, res) => {
+        res.json(await accounts().profileContent(kind, req.params.id, req.query, req.get('authorization')));
+    });
+    for (const method of ['post','delete']) app[method]('/api/reviews/:id/curtida', async (req, res) => {
+        res.json(await accounts().likeReview(req.get('authorization'), req.params.id, method === 'post'));
+    });
+    app.post('/api/conta/desativar', express.json({ limit: '2kb' }), async (req, res) => {
+        res.json(await accounts().deactivate(req.get('authorization'), req.body));
     });
 
     app.get('/api/jogos', async (req, res) => {

@@ -3,6 +3,7 @@ import { readConfig } from './config.js';
 import { createRawgService } from './rawg-service.js';
 import { createTranslationService } from './translation-service.js';
 import { createSupabaseService } from './supabase-service.js';
+import { createAccountService } from './account-service.js';
 
 const config = readConfig();
 const translations = createTranslationService();
@@ -16,7 +17,9 @@ const rawg = createRawgService({
 });
 const supabaseService = createSupabaseService({ url: config.supabaseUrl,
     publishableKey: config.supabasePublishableKey, secretKey: config.supabaseSecretKey });
-const app = createApp({ rawg, supabaseService, corsOrigins: config.corsOrigins });
+const accountService = createAccountService({ url: config.supabaseUrl,
+    publishableKey: config.supabasePublishableKey, secretKey: config.supabaseSecretKey });
+const app = createApp({ rawg, supabaseService, accountService, corsOrigins: config.corsOrigins });
 if (!config.apiKey) console.warn('Configure RAWG_API_KEY em backend/.env.local para consultar jogos.');
 const server = app.listen(config.port, () => console.log(`GameAtlas API: http://localhost:${config.port}`));
 server.on('error', (error) => {
