@@ -37,7 +37,7 @@ try {
     const front = await readFile(new URL('../../.env.local', import.meta.url), 'utf8');
     assert.ok(front.includes(`VITE_SUPABASE_URL=${config.supabaseUrl}`));
     assert.ok(front.includes(`VITE_SUPABASE_PUBLISHABLE_KEY=${config.supabasePublishableKey}`));
-    for (const route of ['login', 'cadastro', 'perfil', 'listas', 'reviews', 'jogos-salvos']) {
+    for (const route of ['login', 'cadastro', 'perfil', 'listas', 'reviews']) {
         const html = await (await fetch(`http://localhost:5173/${route}`, { headers: { Accept: 'text/html' } })).text();
         assert.ok(html.includes('id="root"'), `Acesso direto à rota ${route} não carregou o React`);
     }

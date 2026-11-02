@@ -1,29 +1,355 @@
 @import './api.css';
-.account-page { max-width: 1100px; margin: 0 auto; padding: 110px 1.5rem 3rem; min-height: 75vh; color: var(--color-text); }
-.account-page a, .game-account a { color: var(--color-muted); }
-.account-form { display: grid; gap: 1rem; margin-top: 1.2rem; }
-.auth-form { max-width: 480px; margin: 2rem auto; padding: 1.5rem; border: 1px solid var(--color-accent-dark); border-radius: 12px; }
-.account-form label { display: grid; gap: .4rem; }
-.account-form input, .account-form textarea, .account-form select, .account-select { min-width: 0; width: 100%; padding: .7rem; font: inherit; color: var(--color-text); background: var(--color-bg); border: 1px solid var(--color-muted); border-radius: 6px; }
-.account-form textarea { resize: vertical; }
-.account-form input:focus-visible, .account-form textarea:focus-visible, .account-form select:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.account-form label.account-check { display: flex; gap: .6rem; align-items: center; }
-.account-check input { width: 18px; height: 18px; }
-.account-panel, .game-account { background: var(--color-input-bg); border: 1px solid var(--color-accent-dark); border-radius: 12px; padding: 1.2rem; margin: 1.3rem 0; }
-.account-panel summary { cursor: pointer; font-weight: 600; }
-.account-actions, .account-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin: 1rem 0; }
-.account-tabs a { padding: .6rem .8rem; border: 1px solid var(--color-muted); border-radius: 8px; text-decoration: none; }
-.account-tabs a[aria-current="page"] { background: var(--color-accent-dark); color: var(--color-text); }
-.account-game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
-.account-game-tile { padding: 1rem; border: 1px solid var(--color-accent-dark); border-radius: 10px; max-width: 320px; }
-.account-game-tile img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
-.account-game-tile h3 { font-size: 1.1rem; margin: .8rem 0; }
-.account-logout { background: transparent; border: 0; font: inherit; cursor: pointer; }
-.review-card { margin-bottom: 1rem; }
-.review-card-title a { color: inherit; text-decoration: none; }
-.game-account { margin: 2rem 0; }
-.game-account .account-form { max-width: 650px; }
-.save-control { flex-shrink: 0; }
-.save-error { max-width: 200px; font-size: .8rem; }
-.btn-save:disabled { opacity: .5; cursor: default; }
-[role="alert"] { color: #ffb8bc; }
+
+.account-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 110px 1.5rem 3rem;
+    min-height: 75vh;
+    color: var(--color-text);
+}
+
+.account-page a,
+.game-account a {
+    color: var(--color-muted);
+}
+
+.account-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.2rem;
+}
+
+.auth-form {
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 1px solid var(--color-accent-dark);
+    border-radius: 12px;
+}
+
+.account-form label {
+    display: grid;
+    gap: .4rem;
+}
+
+.account-form input,
+.account-form textarea,
+.account-form select,
+.account-select {
+    min-width: 0;
+    width: 100%;
+    padding: .7rem;
+    font: inherit;
+    color: var(--color-text);
+    background: var(--color-bg);
+    border: 1px solid var(--color-muted);
+    border-radius: 6px;
+}
+
+.account-form textarea {
+    resize: vertical;
+}
+
+.account-form input:focus-visible,
+.account-form textarea:focus-visible,
+.account-form select:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.account-form label.account-check {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+}
+
+.account-check input {
+    width: 18px;
+    height: 18px;
+}
+
+.account-panel,
+.game-account {
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-accent-dark);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin: 1.3rem 0;
+}
+
+.account-panel summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.account-actions,
+.account-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .8rem;
+    margin: 1rem 0;
+}
+
+.account-tabs a {
+    padding: .6rem .8rem;
+    border: 1px solid var(--color-muted);
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.account-tabs a[aria-current="page"] {
+    background: var(--color-accent-dark);
+    color: var(--color-text);
+}
+
+.account-game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+}
+
+.account-game-tile {
+    padding: 1rem;
+    border: 1px solid var(--color-accent-dark);
+    border-radius: 10px;
+    max-width: 320px;
+}
+
+.account-game-tile img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.account-game-tile h3 {
+    font-size: 1.1rem;
+    margin: .8rem 0;
+}
+
+.account-logout {
+    background: transparent;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.review-card {
+    margin-bottom: 1rem;
+}
+
+.review-card-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.game-account {
+    margin: 2rem 0;
+}
+
+.game-account .account-form {
+    max-width: 650px;
+}
+
+.save-control {
+    flex-shrink: 0;
+}
+
+.save-error {
+    max-width: 200px;
+    font-size: .8rem;
+}
+
+.btn-save:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+[role="alert"] {
+    color: #ffb8bc;
+}
+
+/* ---- LISTAS ---- */
+.account-sub {
+    color: var(--color-muted);
+    margin: .4rem 0 1rem;
+}
+
+.account-empty {
+    color: var(--color-muted);
+    margin: 1.5rem 0;
+}
+
+.list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.list-toolbar .account-order {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.list-toolbar .account-select {
+    width: auto;
+}
+
+.list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1.2rem;
+}
+
+.list-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #2a2230 0%, #1d1230 100%);
+    border: 1px solid rgba(147, 51, 234, .35);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.list-tile:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-accent-dark);
+    box-shadow: 0 8px 24px rgba(147, 51, 234, .3);
+}
+
+.list-tile--featured {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 18px rgba(168, 85, 247, .25);
+}
+
+.list-cover {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    height: 150px;
+    background: #140A28;
+}
+
+.list-cover img,
+.list-cover span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #1a0f2e;
+}
+
+.list-tile-body {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    padding: .9rem 1rem 1.1rem;
+}
+
+.list-tile h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.list-tile h2 a {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.list-tile h2 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+
+/* cartão inteiro clicável */
+.list-tile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8rem;
+    color: var(--color-muted);
+}
+
+.list-badge {
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    background: rgba(147, 51, 234, .25);
+    border: 1px solid rgba(147, 51, 234, .5);
+}
+
+.list-tile p {
+    margin: 0;
+    font-size: .85rem;
+    color: #ddd;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* ---- REVIEWS ---- */
+a.review-card-thumb {
+    display: block;
+}
+
+.review-card-more {
+    align-self: flex-start;
+    margin-top: .4rem;
+    font-size: .85rem;
+}
+
+.review-detail {
+    display: grid;
+    grid-template-columns: minmax(180px, 300px) 1fr;
+    gap: 1.5rem;
+    margin-top: 1.2rem;
+    padding: 1.4rem;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #2a2230 0%, #1d1230 100%);
+    border: 1px solid rgba(147, 51, 234, .35);
+}
+
+.review-detail-cover img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.review-detail-body h2 {
+    margin: 0 0 .4rem;
+    font-size: 1.5rem;
+}
+
+.review-detail-body h2 a {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.review-detail-text {
+    white-space: pre-line;
+    line-height: 1.7;
+    color: #ddd;
+}
+
+.review-detail .api-button {
+    text-decoration: none;
+}
+
+@media (max-width: 650px) {
+    .review-detail {
+        grid-template-columns: 1fr;
+    }
+}

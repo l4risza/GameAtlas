@@ -3,12 +3,13 @@ import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ApiFeedback from '../components/ApiFeedback';
+import GameAccount, { GameSaveButton } from '../components/GameAccount';
 import { useGame } from '../hooks/useGame';
 import { useGames } from '../hooks/useGames';
 import { GENRES } from '../services/search-options';
 import '../styles/components.css';
 import '../styles/api.css';
-import '../styles/jogo.css';
+import '../styles/Jogo.css';
 
 /* Extras opcionais por slug. Sobrescrevem a mídia da RAWG (arquivos em public/). */
 const GAME_EXTRAS = {
@@ -48,16 +49,18 @@ const PLATFORM_ICONS = [
 ];
 const platformIcon = (name) => PLATFORM_ICONS.find(([re]) => re.test(name))?.[1] || 'bi-controller';
 
-const SAVED_KEY = 'gameatlas:jogos-salvos';
-const readSaved = () => {
-    try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || []; } catch { return []; }
-};
-
 const formatDate = (date) => (date ? date.split('-').reverse().join('/') : 'Não informado');
 const shorten = (text, max = 260) => (text.length > max ? `${text.slice(0, max).trimEnd()}…` : text);
 const PLACEHOLDER = '/images/game-placeholder.svg';
 const fallbackImg = (event) => { event.currentTarget.onerror = null; event.currentTarget.src = PLACEHOLDER; };
 const MAX_DOTS = 12;
+
+const formatTime = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const rest = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${rest}`;
+};
 
 function genreSlug(name = '') {
     const n = name.trim().toLowerCase();
@@ -121,13 +124,16 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
     );
 }
 
-/* ---------------- carrossel: vídeo primeiro + screenshots ---------------- */
-function MediaCarousel({ items, alt }) {
+/* ---------------- carrossel: trailer primeiro + screenshots ---------------- */
+function MediaCarousel({ items, alt, onVideoError }) {
     const [current, setCurrent] = useState(0);
     const [hover, setHover] = useState(false);
-    const [paused, setPaused] = useState(false);
+    const [paused, setPaused] = useState(true);
+    const [muted, setMuted] = useState(true);
     const [volume, setVolume] = useState(1);
-    const [progress, setProgress] = useState({ time: 0, duration: 0 });
+    const [time, setTime] = useState({ now: 0, total: 0 });
+    const [fullscreen, setFullscreen] = useState(false);
+    const boxRef = useRef(null);
     const videoRef = useRef(null);
     const thumbsRef = useRef(null);
     const thumbRefs = useRef([]);
@@ -135,31 +141,75 @@ function MediaCarousel({ items, alt }) {
     const total = items.length;
     const single = total === 1;
     const isVideo = items[current].type === 'video';
+    const showControls = isVideo && (hover || paused);
+    const percent = time.total ? (time.now / time.total) * 100 : 0;
     const goTo = (index) => setCurrent((index + total) % total);
 
-    // só monta a imagem atual e as vizinhas (evita baixar 40 imagens de uma vez)
+    // só monta a imagem atual e as vizinhas (evita baixar dezenas de imagens de uma vez)
     const isNear = (index) => {
         const distance = Math.abs(index - current);
         return Math.min(distance, total - distance) <= 1;
     };
 
+    const togglePlay = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        if (video.paused) video.play().catch(() => { });
+        else video.pause();
+    };
+
+    const toggleMute = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.muted = !video.muted;
+        if (!video.muted && video.volume === 0) video.volume = 0.5;
+    };
+
+    const changeVolume = (value) => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.volume = value;
+        video.muted = value === 0;
+    };
+
+    const seek = (value) => {
+        if (videoRef.current) videoRef.current.currentTime = value;
+    };
+
+    const toggleFullscreen = () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else boxRef.current?.requestFullscreen?.();
+    };
+
+    const onKeyDown = (event) => {
+        if (['INPUT', 'BUTTON'].includes(event.target.tagName)) return;
+        if (event.key === 'ArrowLeft') { event.preventDefault(); goTo(current - 1); }
+        else if (event.key === 'ArrowRight') { event.preventDefault(); goTo(current + 1); }
+        else if ((event.key === ' ' || event.key === 'k') && isVideo) { event.preventDefault(); togglePlay(); }
+        else if (event.key === 'm' && isVideo) toggleMute();
+        else if (event.key === 'f') toggleFullscreen();
+    };
+
+    // imagens avançam sozinhas; o trailer avança quando termina
     useEffect(() => {
         if (single || isVideo) return undefined;
         const timer = setTimeout(() => setCurrent((c) => (c + 1) % total), 6000);
         return () => clearTimeout(timer);
     }, [current, single, isVideo, total]);
 
+    // toca o trailer ao entrar nele e reinicia ao sair
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
         if (isVideo) {
-            video.play().then(() => setPaused(false)).catch(() => setPaused(true));
+            video.play().catch(() => { });
         } else {
             video.pause();
             video.currentTime = 0;
         }
     }, [isVideo]);
 
+    // mantém a miniatura ativa centralizada sem rolar a página
     useEffect(() => {
         const wrapper = thumbsRef.current;
         const thumb = thumbRefs.current[current];
@@ -170,29 +220,25 @@ function MediaCarousel({ items, alt }) {
         });
     }, [current]);
 
-    // o vídeo começa mudo (regra de autoplay); libera o som no 1º clique
     useEffect(() => {
-        const unmute = (event) => {
-            if (event.target.closest('.video-controls') || !videoRef.current) return;
-            videoRef.current.muted = false;
-            setVolume(videoRef.current.volume);
-            document.removeEventListener('click', unmute);
-        };
-        document.addEventListener('click', unmute);
-        return () => document.removeEventListener('click', unmute);
+        const onChange = () => setFullscreen(document.fullscreenElement === boxRef.current);
+        document.addEventListener('fullscreenchange', onChange);
+        return () => document.removeEventListener('fullscreenchange', onChange);
     }, []);
 
-    const togglePlay = () => {
-        const video = videoRef.current;
-        if (video.paused) { video.play(); setPaused(false); } else { video.pause(); setPaused(true); }
-    };
-
-    const volumeIcon = volume === 0 ? 'bi-volume-mute-fill' : volume < 0.5 ? 'bi-volume-down-fill' : 'bi-volume-up-fill';
+    const volumeIcon = muted || volume === 0
+        ? 'bi-volume-mute-fill'
+        : volume < 0.5 ? 'bi-volume-down-fill' : 'bi-volume-up-fill';
 
     return (
         <div className="media">
             <div
+                ref={boxRef}
                 className="carouselgame"
+                tabIndex={0}
+                role="region"
+                aria-label="Trailer e screenshots do jogo"
+                onKeyDown={onKeyDown}
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
             >
@@ -208,8 +254,14 @@ function MediaCarousel({ items, alt }) {
                                 preload="metadata"
                                 playsInline
                                 muted
-                                onTimeUpdate={(e) => setProgress({ time: e.currentTarget.currentTime, duration: e.currentTarget.duration || 0 })}
+                                onClick={togglePlay}
+                                onPlay={(e) => setPaused(e.currentTarget.paused)}
+                                onPause={(e) => setPaused(e.currentTarget.paused)}
+                                onVolumeChange={(e) => { setMuted(e.currentTarget.muted); setVolume(e.currentTarget.volume); }}
+                                onLoadedMetadata={(e) => setTime({ now: e.currentTarget.currentTime, total: e.currentTarget.duration || 0 })}
+                                onTimeUpdate={(e) => setTime({ now: e.currentTarget.currentTime, total: e.currentTarget.duration || 0 })}
                                 onEnded={() => goTo(current + 1)}
+                                onError={onVideoError}
                             />
                         );
                     }
@@ -224,6 +276,12 @@ function MediaCarousel({ items, alt }) {
                         />
                     );
                 })}
+
+                {isVideo && paused && (
+                    <button type="button" className="big-play" aria-label="Reproduzir trailer" onClick={togglePlay}>
+                        <i className="bi bi-play-fill"></i>
+                    </button>
+                )}
 
                 {!single && (
                     <>
@@ -248,43 +306,48 @@ function MediaCarousel({ items, alt }) {
                     </>
                 )}
 
-                <div
-                    className="video-controls"
-                    style={{
-                        display: isVideo ? '' : 'none',
-                        opacity: hover ? 1 : 0,
-                        pointerEvents: hover ? 'all' : 'none',
-                    }}
-                >
-                    <button type="button" onClick={togglePlay} aria-label={paused ? 'Reproduzir' : 'Pausar'}>
-                        <i className={`bi ${paused ? 'bi-play-fill' : 'bi-pause-fill'}`}></i>
-                    </button>
-                    <input
-                        type="range"
-                        id="videoProgress"
-                        min="0"
-                        step="0.1"
-                        max={progress.duration || 0}
-                        value={progress.time}
-                        onChange={(e) => { videoRef.current.currentTime = Number(e.target.value); }}
-                    />
-                    <div className="volume-wrap">
-                        <i className={`bi ${volumeIcon}`}></i>
+                {isVideo && (
+                    <div className={`video-controls${showControls ? ' visible' : ''}`}>
+                        <button type="button" onClick={togglePlay} aria-label={paused ? 'Reproduzir' : 'Pausar'}>
+                            <i className={`bi ${paused ? 'bi-play-fill' : 'bi-pause-fill'}`}></i>
+                        </button>
+
+                        <span className="vc-time">{formatTime(time.now)} / {formatTime(time.total)}</span>
+
                         <input
                             type="range"
-                            id="videoVolume"
+                            className="vc-range vc-progress"
+                            aria-label="Progresso do vídeo"
                             min="0"
-                            max="1"
-                            step="0.05"
-                            value={volume}
-                            onChange={(e) => {
-                                const value = Number(e.target.value);
-                                videoRef.current.volume = value;
-                                setVolume(value);
-                            }}
+                            step="0.1"
+                            max={time.total || 0}
+                            value={time.now}
+                            style={{ '--fill': `${percent}%` }}
+                            onChange={(e) => seek(Number(e.target.value))}
                         />
+
+                        <div className="volume-wrap">
+                            <button type="button" onClick={toggleMute} aria-label={muted ? 'Ativar som' : 'Silenciar'}>
+                                <i className={`bi ${volumeIcon}`}></i>
+                            </button>
+                            <input
+                                type="range"
+                                className="vc-range vc-volume"
+                                aria-label="Volume"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={muted ? 0 : volume}
+                                style={{ '--fill': `${(muted ? 0 : volume) * 100}%` }}
+                                onChange={(e) => changeVolume(Number(e.target.value))}
+                            />
+                        </div>
+
+                        <button type="button" onClick={toggleFullscreen} aria-label={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}>
+                            <i className={`bi ${fullscreen ? 'bi-fullscreen-exit' : 'bi-fullscreen'}`}></i>
+                        </button>
                     </div>
-                </div>
+                )}
             </div>
 
             {!single && (
@@ -337,15 +400,7 @@ function SimilarGames({ gameId, genre }) {
 /* ---------------- conteúdo da página ---------------- */
 function GameDetails({ game, reload }) {
     const extras = GAME_EXTRAS[game.slug] || {};
-    const id = String(game.id);
-    const [saved, setSaved] = useState(() => readSaved().includes(id));
-
-    const toggleSave = () => {
-        const list = readSaved();
-        const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
-        try { localStorage.setItem(SAVED_KEY, JSON.stringify(next)); } catch { /* sem localStorage */ }
-        setSaved(next.includes(id));
-    };
+    const [videoFailed, setVideoFailed] = useState(false);
 
     const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.rawg_rating;
     const criticScore = extras.criticScore ?? game.metacritic;
@@ -360,18 +415,18 @@ function GameDetails({ game, reload }) {
         game.playtime ? ['Tempo médio de jogo', `${game.playtime} horas`] : null,
     ].filter(Boolean);
 
-    // vídeo (se existir) sempre primeiro, depois todas as screenshots
+    // trailer (se existir e carregar) sempre primeiro, depois todas as screenshots
     const mediaItems = useMemo(() => {
         const cover = game.banner || game.image;
         const trailer = extras.trailer || game.trailer;
         const shots = extras.screenshots?.length ? extras.screenshots : (game.screenshots || []);
         const items = [];
 
-        if (trailer?.src) items.push({ type: 'video', src: trailer.src, poster: trailer.poster || cover });
+        if (trailer?.src && !videoFailed) items.push({ type: 'video', src: trailer.src, poster: trailer.poster || cover });
         [...new Set(shots)].forEach((src) => items.push({ type: 'image', src }));
         if (!items.some((item) => item.type === 'image')) items.push({ type: 'image', src: cover || PLACEHOLDER });
         return items;
-    }, [extras, game.trailer, game.screenshots, game.banner, game.image]);
+    }, [extras, game.trailer, game.screenshots, game.banner, game.image, videoFailed]);
 
     const slug = genreSlug(game.genres?.[0]);
 
@@ -380,7 +435,12 @@ function GameDetails({ game, reload }) {
 
             {/* COLUNA ESQUERDA */}
             <div className="col-left">
-                <MediaCarousel items={mediaItems} alt={game.title} />
+                <MediaCarousel
+                    key={mediaItems.length}
+                    items={mediaItems}
+                    alt={game.title}
+                    onVideoError={() => setVideoFailed(true)}
+                />
 
                 <div className="box-left">
                     <h2>Sobre o jogo</h2>
@@ -411,6 +471,9 @@ function GameDetails({ game, reload }) {
                         </ul>
                     </div>
                 </div>
+
+                {/* avaliar o jogo e adicionar às listas (conta do usuário) */}
+                <GameAccount game={game} />
             </div>
 
             {/* COLUNA DIREITA */}
@@ -419,15 +482,7 @@ function GameDetails({ game, reload }) {
                 <div className="info">
                     <div className="info-header">
                         <h1>{game.title}</h1>
-                        <button
-                            type="button"
-                            className={`btn-save${saved ? ' saved' : ''}`}
-                            title={saved ? 'Remover dos salvos' : 'Salvar jogo'}
-                            aria-pressed={saved}
-                            onClick={toggleSave}
-                        >
-                            <i className={`bi ${saved ? 'bi-bookmark-fill' : 'bi-bookmark'}`}></i>
-                        </button>
+                        <GameSaveButton game={game} />
                     </div>
 
                     <p className="meta">
@@ -457,7 +512,7 @@ function GameDetails({ game, reload }) {
                 </div>
 
                 <div className="col-right-bottom">
-                    <div className="game-platforms">
+                    <div className="box-right">
                         <h2>Plataformas</h2>
                         <div className="platforms">
                             {(game.platforms?.length ? game.platforms : [game.platform]).map((p) => (
@@ -488,18 +543,22 @@ export default function Jogo() {
     return (
         <>
             <Navbar />
-            <main className="page-container">
-                <nav className="game-tabs" aria-label="Seções do jogo">
-                    <button type="button" className="back-button" aria-label="Voltar" onClick={goBack}>
-                        <i className="bi bi-chevron-left" aria-hidden="true"></i>
-                    </button>
-                    <Link to={`/jogo/${encodeURIComponent(id)}`} className="active" aria-current="page">Visão Geral</Link>
-                    <Link to={`/reviews?jogo=${encodeURIComponent(id)}`}>Reviews</Link>
-                </nav>
+            <div className="game-page">
+                <div className="game-hero-band" aria-hidden="true"></div>
 
-                <ApiFeedback loading={loading} error={error} onRetry={reload} />
-                {game && <GameDetails key={game.id} game={game} reload={reload} />}
-            </main>
+                <main className="page-container">
+                    <nav className="game-tabs" aria-label="Seções do jogo">
+                        <button type="button" className="back-button" aria-label="Voltar" onClick={goBack}>
+                            <i className="bi bi-chevron-left" aria-hidden="true"></i>
+                        </button>
+                        <Link to={`/jogo/${encodeURIComponent(id)}`} className="active" aria-current="page">Visão Geral</Link>
+                        <Link to={`/reviews?jogo=${encodeURIComponent(id)}`}>Reviews</Link>
+                    </nav>
+
+                    <ApiFeedback loading={loading} error={error} onRetry={reload} />
+                    {game && <GameDetails key={game.id} game={game} reload={reload} />}
+                </main>
+            </div>
             <Footer />
         </>
     );

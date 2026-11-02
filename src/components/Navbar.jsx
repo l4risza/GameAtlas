@@ -122,7 +122,6 @@ export default function Navbar({
 
                             {isLoggedIn ? (
                                 <ul className="navbar-nav navbar-account">
-                                    <li className="nav-item"><Link className="nav-link text-nowrap" to="/jogos-salvos" onClick={closeMenu}>JOGOS SALVOS</Link></li>
                                     <li className="nav-item">
                                         <Link className="nav-link text-nowrap" to={perfilHref} onClick={closeMenu}>
                                             PERFIL

@@ -54,7 +54,7 @@ function SignedGameAccount({ game, userId }) {
                 </option>)}
             </select></label><button className="api-button" disabled={busy || !listId}>Adicionar à lista</button></form>}
             {lists.data && <Pagination page={listPage} count={lists.data.count} onChange={(page) => { setListPage(page); setListId(''); }} />}
-            <p><Link to="/listas?minhas=1">Criar ou gerenciar minhas listas</Link></p>
+            <p><Link to="/listas/salvos">Ver meus jogos salvos</Link> · <Link to="/listas?aba=minhas">Criar ou gerenciar minhas listas</Link></p>
         </>}
     </section>;
 }
@@ -73,7 +73,7 @@ function SignedSaveButton({ game, userId }) {
             reload();
         } catch (e) { setActionError(accountError(e)); } finally { setBusy(false); }
     }
-    const label = error ? 'Tentar carregar Jogos Salvos novamente' : data?.saved ? 'Remover de Jogos Salvos' : 'Salvar jogo';
+    const label = error ? 'Tentar novamente' : data?.saved ? 'Remover dos jogos salvos' : 'Salvar jogo';
     return <div className="save-control"><button type="button" className={`btn-save${data?.saved ? ' saved' : ''}`}
         title={label} aria-label={label} aria-pressed={Boolean(data?.saved)} aria-busy={busy || loading}
         disabled={busy || loading} onClick={toggle}>

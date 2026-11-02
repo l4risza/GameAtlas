@@ -778,3 +778,32 @@
         gap: 16px;
     }
 }
+
+/* ---- CONTA NA PÁGINA DO JOGO (avaliar / adicionar à lista) ---- */
+.col-left .game-account {
+    margin: 0;
+    padding: 22px;
+    border-radius: 8px;
+    background: linear-gradient(160deg, #2a2230 0%, #1d1230 100%);
+    border: 1px solid rgba(147, 51, 234, 0.35);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.game-account h2 {
+    color: #B39EB5;
+    font-size: 1.1rem;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.info-header a.btn-save {
+    text-decoration: none;
+    display: inline-flex;
+}
+
+.save-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}

@@ -36,6 +36,19 @@ export function normalizeGame(game) {
         rawg_url: game.slug ? `https://rawg.io/games/${encodeURIComponent(game.slug)}` : 'https://rawg.io',
     };
 }
+const STEAM_APPDETAILS_URL = 'https://store.steampowered.com/api/appdetails';
+
+function steamAppIdFromStores(stores) {
+    const list = Array.isArray(stores?.results) ? stores.results : [];
+    for (const item of list) {
+        const match = /^https?:\/\/store\.steampowered\.com\/app\/(\d+)/i.exec(item?.url || '');
+        if (match) return match[1];
+    }
+    return null;
+}
+
+const toHttps = (url) => (typeof url === 'string' ? url.replace(/^http:\/\//i, 'https://') : null);
+
 function normalizeMedia(data, screenshots, movies) {
     const onlyUrls = (list) => [...new Set(list.filter((url) => /^https?:\/\//i.test(url || '')))];
 
@@ -56,19 +69,8 @@ function normalizeMedia(data, screenshots, movies) {
             ? { name: movie.name || '', src: trailerSrc, poster: movie.preview || null }
             : null,
     };
-    const STEAM_APPDETAILS_URL = 'https://store.steampowered.com/api/appdetails';
-
-    function steamAppIdFromStores(stores) {
-        const list = Array.isArray(stores?.results) ? stores.results : [];
-        for (const item of list) {
-            const match = /^https?:\/\/store\.steampowered\.com\/app\/(\d+)/i.exec(item?.url || '');
-            if (match) return match[1];
-        }
-        return null;
-    }
-
-    const toHttps = (url) => (typeof url === 'string' ? url.replace(/^http:\/\//i, 'https://') : null);
 }
+
 export function createRawgService({
     apiKey, fetchImpl = fetch, timeoutMs = 15000, cacheTtlMs = 300000, now = Date.now,
     retries = 2, retryDelayMs = 250, onDiagnostic = () => { },
@@ -309,15 +311,20 @@ export function createRawgService({
         async getGame(id) {
             const data = await request(`games/${id}`);
             if (!Number.isInteger(data.id)) throw new ApiError(502, 'RAWG_INVALID_RESPONSE', 'A RAWG retornou uma resposta inválida.');
-            // Mídia é opcional: se a RAWG falhar aqui, a página abre normalmente.
-            const [shotsResult, moviesResult] = await Promise.allSettled([
+
+            // Mídia é opcional: se falhar, a página abre normalmente.
+            const [shotsResult, moviesResult, storesResult] = await Promise.allSettled([
                 request(`games/${id}/screenshots`, { page_size: 40 }),
                 request(`games/${id}/movies`),
+                request(`games/${id}/stores`),
             ]);
-            const game = {
-                ...normalizeGame(data),
-                ...normalizeMedia(data, shotsResult.value, moviesResult.value),
-            };
+            const media = normalizeMedia(data, shotsResult.value, moviesResult.value);
+            if (!media.trailer) {
+                const appId = steamAppIdFromStores(storesResult.value);
+                if (appId) media.trailer = await steamTrailer(appId);
+            }
+            const game = { ...normalizeGame(data), ...media };
+
             if (!translateDescription) return game;
             try {
                 const translated = await translateDescription(game.description);
