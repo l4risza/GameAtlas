@@ -5,6 +5,7 @@ import { useAccountData } from '../../hooks/useAccountData';
 import { PROFILE_EXTRAS_DEFAULTS, discardAvatar, loadSettingsProfile, pruneAvatars, updateProfile, uploadAvatar } from '../../services/settings';
 import { BIO_MAX, FAVORITES_MAX, FAVORITE_MAX_LENGTH, NAME_MAX, SOCIALS_MAX, SOCIAL_NETWORKS,
     checkBio, checkDisplayName, checkFavorite, checkSocial, checkUsername } from '../../services/settings-validation';
+import avatar from '../../assets/default-avatar.png';
 
 const ORDER_LABEL = { recentes: 'Mais recentes', antigas: 'Mais antigas' };
 const message = (error) => (error instanceof Error ? error.message : 'Não foi possível salvar.');
@@ -143,7 +144,7 @@ export function ConfigPerfilForm({ userId, values, extrasAvailable, onSave }) {
     return <>
         <h2 className="config-section-title">Foto de perfil:</h2>
         <div className="config-avatar-row">
-            <img className="config-avatar" src={values.avatar_url || '/images/perfil.png'} alt="Foto de perfil atual" />
+            <img className="config-avatar" src={values.avatar_url || avatar} alt="Foto de perfil atual" />
             <div className="config-actions">
                 <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={chooseAvatar} />
                 <button type="button" className="config-btn" disabled={busy} onClick={() => fileRef.current?.click()}>Escolher</button>

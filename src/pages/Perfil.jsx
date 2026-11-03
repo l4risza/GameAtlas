@@ -12,6 +12,7 @@ import { loadLists, loadReviews } from '../services/account';
 import { SOCIAL_NETWORKS } from '../services/settings-validation';
 import '../styles/components.css';
 import '../styles/perfil.css';
+import avatar from '../assets/default-avatar.png';
 
 const EMPTY_MESSAGE = { reviews: 'Você ainda não avaliou nenhum jogo.', listas: 'Você ainda não criou uma lista.' };
 
@@ -92,7 +93,7 @@ export function ProfileView({ profile, tab, onTabChange }) {
             <section className="profile-card">
                 <div className="profile-top">
                     <div className="profile-photo-box">
-                        <img src={profile.avatar_url || '/images/perfil.png'} alt="Foto de perfil" className="profile-photo" />
+                        <img src={profile.avatar_url || avatar} alt="Foto de perfil" className="profile-photo" />
                     </div>
 
                     <div className="profile-info">
@@ -112,7 +113,7 @@ export function ProfileView({ profile, tab, onTabChange }) {
                             );
                         })}
                         <Link to="/configuracoes" className="btn-rede profile-edit">
-                            <i className="bi bi-pencil-square" aria-hidden="true"></i> Editar perfil
+                            <i className="bi bi-pencil-square" aria-hidden="true"></i> Editar
                         </Link>
                     </div>
                 </div>
