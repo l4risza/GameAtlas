@@ -3,9 +3,10 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/auth-context';
 import { accountError, database } from '../services/supabase';
 import '../styles/components.css';
+import logo from '../assets/logo.png';
 
 export default function Navbar({
-    logoSrc = '/images/controle.png',
+    logoSrc = logo,
     brandName = 'GameAtlas',
     links = [
         { label: 'EXPLORAR', to: '/explorar' },
@@ -138,7 +139,6 @@ export default function Navbar({
                                             <span className="account-label-mobile">CONFIGURAÇÕES</span>
                                         </Link>
                                     </li>
-                                    <li className="nav-item"><button className="nav-link account-logout" type="button" disabled={loggingOut} onClick={logout}>{loggingOut ? 'SAINDO...' : 'SAIR'}</button></li>
                                 </ul>
                             ) : !loading && (
                                 <ul className="navbar-nav navbar-account">
