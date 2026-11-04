@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import AccountLayout, { Pagination } from '../components/AccountLayout';
-import ReviewCard from '../components/ReviewCard';
+import ReviewFeedCard from '../components/ReviewFeedCard';
 import ApiFeedback from '../components/ApiFeedback';
 import { useAuth } from '../context/auth-context';
 import { useAccountData } from '../hooks/useAccountData';
 import { findGame, loadReviews } from '../services/account';
+import '../styles/reviews.css';
 
 const positiveInt = (value, max = Infinity) => {
     const number = Number(value);
@@ -43,44 +44,62 @@ export default function Reviews() {
     }, [page, mine, userId, rawgId, order]);
     const { data, loading, error, reload } = useAccountData(`reviews:${userId}:${mine}:${rawgId}:${order}:${page}`, load);
 
-    const title = rawgId
-        ? (data?.game ? `Avaliações de ${data.game.nome}` : 'Avaliações deste jogo')
-        : mine ? 'Minhas avaliações' : 'Avaliações da comunidade';
-
     return (
-        <AccountLayout title={title} requireLogin={mine}>
-            <nav className="account-tabs" aria-label="Tipo de avaliação">
-                <Link to={href({ aba: '' })} aria-current={!mine ? 'page' : undefined}>Comunidade</Link>
-                {user
-                    ? <Link to={href({ aba: 'minhas' })} aria-current={mine ? 'page' : undefined}>Minhas avaliações</Link>
-                    : <Link to="/login?voltar=%2Freviews%3Faba%3Dminhas">Minhas avaliações</Link>}
-            </nav>
+        <AccountLayout title="" requireLogin={mine}>
+            <div className="reviews-band" aria-hidden="true"></div>
 
-            <div className="list-toolbar">
-                <span>
-                    {rawgId && <><Link to={`/jogo/${rawgId}`}>Ver o jogo</Link> · <Link to="/reviews">Todas as avaliações</Link></>}
-                </span>
-                <label className="account-order">Ordenar por
-                    <select className="account-select" value={order}
-                        onChange={(event) => setParams(query({ ordem: event.target.value === 'antigas' ? 'antigas' : '' }))}>
-                        <option value="recentes">Mais recentes</option>
-                        <option value="antigas">Mais antigas</option>
-                    </select>
-                </label>
-            </div>
-
-            <ApiFeedback loading={loading} error={error} onRetry={reload} />
-            {data && (
-                <>
-                    {!data.items.length && (
-                        <p className="account-empty">
-                            {mine ? 'Você ainda não avaliou nenhum jogo. Abra um jogo e deixe sua nota.' : 'Ainda não há avaliações.'}
-                        </p>
+            <div className="reviews-wrap">
+                <nav className="reviews-tabs" aria-label="Seções de reviews">
+                    {rawgId ? (
+                        <>
+                            <Link to={`/jogo/${rawgId}`}>Visão Geral</Link>
+                            <Link to={href({ aba: '' })} className="active" aria-current="page">Reviews</Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link to={href({ aba: '' })} className={!mine ? 'active' : undefined}
+                                aria-current={!mine ? 'page' : undefined}>Comunidade</Link>
+                            {user
+                                ? <Link to={href({ aba: 'minhas' })} className={mine ? 'active' : undefined}
+                                    aria-current={mine ? 'page' : undefined}>Minhas reviews</Link>
+                                : <Link to="/login?voltar=%2Freviews%3Faba%3Dminhas">Minhas reviews</Link>}
+                        </>
                     )}
-                    {data.items.map((review) => <ReviewCard key={review.id} review={review} showAuthor={!mine} />)}
-                    <Pagination page={page} count={data.count} onChange={(next) => setParams(query({ page: String(next) }))} />
-                </>
-            )}
+                </nav>
+
+                <section className="reviews-panel">
+                    <h1 className="reviews-title">{mine ? 'Minhas reviews' : 'Reviews'}</h1>
+                    {rawgId && <p className="reviews-sub">{data?.game?.nome || 'Este jogo'}</p>}
+                    <hr />
+
+                    <div className="reviews-toolbar">
+                        <span>{rawgId && <Link to="/reviews">Ver todas as reviews</Link>}</span>
+                        <label className="account-order">Ordenar por
+                            <select className="account-select" value={order}
+                                onChange={(event) => setParams(query({ ordem: event.target.value === 'antigas' ? 'antigas' : '' }))}>
+                                <option value="recentes">Mais recentes</option>
+                                <option value="antigas">Mais antigas</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <ApiFeedback loading={loading} error={error} onRetry={reload} />
+
+                    {data && (
+                        <>
+                            {!data.items.length && (
+                                <p className="account-empty">
+                                    {mine ? 'Você ainda não avaliou nenhum jogo. Abra um jogo e deixe sua nota.' : 'Ainda não há reviews.'}
+                                </p>
+                            )}
+                            <div className="feed-list">
+                                {data.items.map((review) => <ReviewFeedCard key={review.id} review={review} />)}
+                            </div>
+                            <Pagination page={page} count={data.count} onChange={(next) => setParams(query({ page: String(next) }))} />
+                        </>
+                    )}
+                </section>
+            </div>
         </AccountLayout>
     );
 }
