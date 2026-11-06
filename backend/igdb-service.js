@@ -13,7 +13,7 @@ export function createIgdbClient({ clientId, clientSecret, fetchImpl = fetch,
             client_id: clientId, client_secret: clientSecret, grant_type:
                 'client_credentials',
         });
-        const response = await fetchImpl('${ TOKEN_URL } ? ${ params }', { method: 'POST' });
+        const response = await fetchImpl(`${TOKEN_URL}?${params}`, { method: 'POST' });
         if (!response.ok) throw new ApiError(502, 'IGDB_AUTH_ERROR', 'A Twitch recusou as credenciais do servidor.');
         const data = await response.json();
         token = data.access_token;
@@ -93,4 +93,48 @@ export function normalizeGame(game) {
         playtime: null,
         website: null,
     };
+}
+const DETAIL_FIELDS = LIST_FIELDS.replace(/;$/, ',videos.video_id,videos.name;');
+
+function normalizeDetails(game) {
+    const shots = (game.screenshots || []).map((item) => image(item, '1080p')).filter(Boolean);
+    const fallback = (game.artworks || []).map((item) => image(item, '1080p')).filter(Boolean);
+    const videos = (game.videos || []).filter((item) => item.video_id);
+    const video = videos.find((item) => /trailer/i.test(item.name || '')) || videos[0];
+    return {
+        ...normalizeGame(game),
+        screenshots: shots.length ? shots : fallback,
+        trailer: video ? { name: video.name || '', youtubeId: video.video_id } : null,
+    };
+}
+
+export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDiagnostic = () => { }, translateDescription }) {
+    const query = createIgdbClient({ clientId, clientSecret, fetchImpl, now });
+
+    async function getGame(id) {
+        const { data } = await query('games', `${DETAIL_FIELDS} where id = ${id}; limit 1;`);
+        if (!data[0]) throw new ApiError(404, 'GAME_NOT_FOUND', 'Jogo não encontrado.');
+        const game = normalizeDetails(data[0]);
+
+        if (!translateDescription) return game;
+        try {
+            const translated = await translateDescription(game.description);
+            return {
+                ...game,
+                description: translated.text,
+                description_translation: translated.status,
+                description_language: translated.language,
+            };
+        } catch {
+            // Uma falha de tradução não impede a exibição do jogo.
+            onDiagnostic({
+                endpoint: `games/${id}/translation`, attempt: 1, status: null,
+                code: 'TRANSLATION_UNAVAILABLE', retrying: false,
+            });
+            return { ...game, description: '', description_translation: 'unavailable', description_language: 'pt-BR' };
+        }
+    }
+
+    // listGames, categories e metadata entram aqui no passo 3.
+    return { getGame };
 }

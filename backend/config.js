@@ -14,7 +14,8 @@ export function readConfig(env = process.env) {
     }
     return {
         port,
-        apiKey: env.RAWG_API_KEY?.trim() || '',
+        twitchClientId: env.TWITCH_CLIENT_ID?.trim() || '', 
+        twitchClientSecret: env.TWITCH_CLIENT_SECRET?.trim() || '',
         supabaseUrl: env.SUPABASE_URL?.trim() || '',
         supabasePublishableKey: env.SUPABASE_PUBLISHABLE_KEY?.trim() || '',
         supabaseSecretKey: env.SUPABASE_SECRET_KEY?.trim() || '',
