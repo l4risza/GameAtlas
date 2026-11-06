@@ -2,6 +2,45 @@ import { ApiError } from './errors.js';
 const TOKEN_URL = 'https://id.twitch.tv/oauth2/token';
 const IGDB_URL = 'https://api.igdb.com/v4/';
 const MIN_INTERVAL_MS = 260;
+
+const PLATFORM_FILTERS = {
+    pc: 'platforms = (6)',
+    playstation: 'platforms.platform_family = 1',
+    xbox: 'platforms.platform_family = 2',
+    nintendo: 'platforms.platform_family = 5',
+    sega: 'platforms.platform_family = 3',
+    mobile: 'platforms = (34,39)',
+    'mac-linux': 'platforms = (14,3)',
+    web: 'platforms = (82)',
+};
+
+const ORDER = {
+    '-added': 'total_rating_count desc',
+    '-rating': 'rating desc',
+    '-metacritic': 'aggregated_rating desc',
+    '-released': 'first_release_date desc',
+    name: 'name asc',
+};
+const ORDERING_BY_SORT = { popular: '-added', rating: '-rating', recent: '-released', name: 'name' };
+
+const unix = (date) => Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 1000);
+const quoted = (value) => `"${String(value).replace(/["\\]/g, '')}"`;
+
+function buildWhere({ genres, tags, dates, parent_platforms, hide_extras }, ordering) {
+    const rules = [];
+    if (genres) rules.push(`genres.slug = (${genres.split(',').map(quoted).join(',')})`);
+    if (tags) rules.push(`game_modes.slug = ${quoted(tags)}`);
+    if (parent_platforms) rules.push(PLATFORM_FILTERS[parent_platforms]);
+    if (dates) {
+        const [start, end] = dates.split(',');
+        rules.push(`first_release_date >= ${unix(start)} & first_release_date <= ${unix(end)}`);
+    }
+    if (hide_extras) rules.push('parent_game = null & version_parent = null');
+    if (ordering === '-rating') rules.push('rating_count >= 20');
+    if (ordering === '-metacritic') rules.push('aggregated_rating_count >= 3');
+    return rules.filter(Boolean).join(' & ');
+}
+
 export function createIgdbClient({ clientId, clientSecret, fetchImpl = fetch,
     now = Date.now }) {
     let token = null;
@@ -109,7 +148,18 @@ function normalizeDetails(game) {
 }
 
 export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDiagnostic = () => { }, translateDescription }) {
-    const query = createIgdbClient({ clientId, clientSecret, fetchImpl, now });
+    const client = createIgdbClient({ clientId, clientSecret, fetchImpl, now });
+    const cache = new Map();
+
+    async function query(endpoint, body) {
+        const key = `${endpoint}:${body}`;
+        const cached = cache.get(key);
+        if (cached && cached.expires > Date.now()) return cached.value;
+        const value = await client(endpoint, body);
+        if (cache.size >= 100) cache.delete(cache.keys().next().value);
+        cache.set(key, { value, expires: Date.now() + 300000 });
+        return value;
+    }
 
     async function getGame(id) {
         const { data } = await query('games', `${DETAIL_FIELDS} where id = ${id}; limit 1;`);
@@ -135,6 +185,72 @@ export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDi
         }
     }
 
-    // listGames, categories e metadata entram aqui no passo 3.
-    return { getGame };
+    async function listGames(params) {
+        const { page = 1, page_size = 20, search, sort = 'ordering' } = params;
+        const ordering = ORDERING_BY_SORT[sort] || params.ordering || '-added';
+        const useRelevance = search && sort === 'relevance';
+        const where = buildWhere(params, useRelevance ? null : ordering);
+        const clauses = [LIST_FIELDS];
+
+        if (useRelevance) {
+            clauses.push(`search ${quoted(search)};`);
+            if (where) clauses.push(`where ${where};`);
+        } else {
+            const byName = search ? `name ~ *${quoted(search)}*` : '';
+            const fullWhere = [byName, where].filter(Boolean).join(' & ');
+            if (fullWhere) clauses.push(`where ${fullWhere};`);
+            clauses.push(`sort ${ORDER[ordering] || ORDER['-added']};`);
+        }
+        clauses.push(`limit ${page_size}; offset ${(page - 1) * page_size};`);
+
+        const { data, total } = await query('games', clauses.join(' '));
+        const hasNext = total ? page * page_size < total : data.length === page_size;
+        return {
+            count: total || data.length,
+            count_scope: 'total',
+            has_more: false,
+            next: hasNext ? page + 1 : null,
+            previous: page > 1 ? page - 1 : null,
+            results: data.map(normalizeGame),
+        };
+    }
+
+    async function categories(keys) {
+        const today = Math.floor(Date.now() / 1000);
+        const DAY = 86400;
+        const base = 'cover != null & parent_game = null & version_parent = null';
+        const rules = {
+            emAlta: `where ${base} & first_release_date >= ${today - 730 * DAY} & first_release_date <= ${today}; sort total_rating_count desc;`,
+            melhoresAv: `where ${base} & aggregated_rating_count >= 3; sort aggregated_rating desc;`,
+            lancamentos: `where ${base} & first_release_date >= ${today - 90 * DAY} & first_release_date <= ${today}; sort first_release_date desc;`,
+            classicos: `where ${base} & first_release_date <= ${unix('2015-12-31')}; sort total_rating_count desc;`,
+            indie: `where ${base} & genres.slug = "indie"; sort total_rating_count desc;`,
+            multiplayer: `where ${base} & game_modes.slug = "multiplayer"; sort total_rating_count desc;`,
+        };
+        const body = keys.map((key) => `query games "${key}" { ${LIST_FIELDS} ${rules[key]} limit 12; };`).join('\n');
+        const { data } = await query('multiquery', body);
+
+        const games = {};
+        const categoryIds = {};
+        for (const group of data) {
+            const items = group.result.map(normalizeGame);
+            categoryIds[group.name] = items.map((game) => game.id);
+            for (const game of items) games[game.id] = game;
+        }
+        return { games, categories: categoryIds };
+    }
+
+    async function metadata(resource, { page = 1, page_size = 40 }) {
+        const { data, total } = await query(resource,
+            `fields id,name,slug; sort name asc; limit ${page_size}; offset ${(page - 1) * page_size};`);
+        const hasNext = total ? page * page_size < total : data.length === page_size;
+        return {
+            count: total || data.length,
+            next: hasNext ? page + 1 : null,
+            previous: page > 1 ? page - 1 : null,
+            results: data,
+        };
+    }
+
+    return { listGames, categories, getGame, metadata };
 }

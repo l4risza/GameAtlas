@@ -20,7 +20,7 @@ const accountService = createAccountService({
     publishableKey: config.supabasePublishableKey, secretKey: config.supabaseSecretKey
 });
 const app = createApp({ igdb, supabaseService, accountService, corsOrigins: config.corsOrigins });
-if (!config.apiKey) console.warn('Configure RAWG_API_KEY em backend/.env.local para consultar jogos.');
+if (!config.twitchClientId || !config.twitchClientSecret) console.warn('Configure as credenciais da Twitch em backend/.env.local para consultar jogos.');
 const server = app.listen(config.port, () => console.log(`GameAtlas API: http://localhost:${config.port}`));
 server.on('error', (error) => {
     console.error(error.code === 'EADDRINUSE' ? `A porta ${config.port} já está em uso.` : 'Não foi possível iniciar a API.');

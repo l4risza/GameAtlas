@@ -6,6 +6,44 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const unavailable = () => new ApiError(503, 'DATABASE_UNAVAILABLE', 'Não foi possível acessar o banco. Tente novamente.');
 const invalid = (message) => new ApiError(400, 'INVALID_BODY', message);
 
+const PLATFORM_FILTERS = {
+    pc: 'platforms = (6)',
+    playstation: 'platforms.platform_family = 1',
+    xbox: 'platforms.platform_family = 2',
+    nintendo: 'platforms.platform_family = 5',
+    sega: 'platforms.platform_family = 3',
+    mobile: 'platforms = (34,39)',
+    'mac-linux': 'platforms = (14,3)',
+    web: 'platforms = (82)',
+};
+
+const ORDER = {
+    '-added': 'total_rating_count desc',
+    '-rating': 'rating desc',
+    '-metacritic': 'aggregated_rating desc',
+    '-released': 'first_release_date desc',
+    name: 'name asc',
+};
+const ORDERING_BY_SORT = { popular: '-added', rating: '-rating', recent: '-released', name: 'name' };
+
+const unix = (date) => Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 1000);
+const quoted = (value) => `"${String(value).replace(/["\\]/g, '')}"`;
+
+function buildWhere({ genres, tags, dates, parent_platforms, hide_extras }, ordering) {
+    const rules = [];
+    if (genres) rules.push(`genres.slug = (${genres.split(',').map(quoted).join(',')})`);
+    if (tags) rules.push(`game_modes.slug = ${quoted(tags)}`);
+    if (parent_platforms) rules.push(PLATFORM_FILTERS[parent_platforms]);
+    if (dates) {
+        const [start, end] = dates.split(',');
+        rules.push(`first_release_date >= ${unix(start)} & first_release_date <= ${unix(end)}`);
+    }
+    if (hide_extras) rules.push('parent_game = null & version_parent = null');
+    if (ordering === '-rating') rules.push('rating_count >= 20');
+    if (ordering === '-metacritic') rules.push('aggregated_rating_count >= 3');
+    return rules.filter(Boolean).join(' & ');
+}
+
 export function createAccountService({ url, publishableKey, secretKey, createClientImpl = createClient, now = Date.now }) {
     const configured = Boolean(url && publishableKey && secretKey);
     const admin = configured ? createClientImpl(url, secretKey, options) : null;

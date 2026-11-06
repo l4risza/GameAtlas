@@ -1,5 +1,7 @@
 import { ApiError } from './errors.js';
 
+const PLATFORM_KEYS = ['pc', 'playstation', 'xbox', 'nintendo', 'mobile', 'mac-linux', 'sega', 'web'];
+
 export function invalid(message) {
     throw new ApiError(400, 'INVALID_QUERY', message);
 }
@@ -33,7 +35,7 @@ function boolean(value, name) {
 export function searchQuery(query) {
     const params = listQuery(query);
     params.sort = text(query.sort, 'sort') || (query.ordering ? 'ordering' : 'relevance');
-    if (!['relevance', 'popular', 'rating', 'name', 'ordering'].includes(params.sort)) invalid('sort contém uma ordenação inválida.');
+    if (!['relevance', 'popular', 'rating', 'recent', 'name', 'ordering'].includes(params.sort)) invalid('sort contém uma ordenação inválida.');
     params.hide_extras = boolean(query.hide_extras, 'hide_extras');
     params.batch = integer(query.batch, 'batch', 1, 20);
     return params;
@@ -45,7 +47,7 @@ function validDate(value) {
 }
 
 export function listQuery(query) {
-    if (query.key !== undefined) invalid('A chave RAWG é configurada apenas no servidor.');
+    if (query.key !== undefined) invalid('A chave da API é configurada apenas no servidor.');
     const params = {
         page: integer(query.page, 'page', 1),
         page_size: integer(query.page_size, 'page_size', 20, 48),
@@ -59,7 +61,7 @@ export function listQuery(query) {
     for (const name of ['genres', 'platforms', 'parent_platforms', 'developers', 'tags']) {
         const value = text(query[name], name);
         if (value) {
-            if (['platforms', 'parent_platforms'].includes(name) && !/^[1-9]\d*(,[1-9]\d*)*$/.test(value)) invalid(`${name} deve conter IDs numéricos separados por vírgula.`);
+            if (name === 'parent_platforms' && !PLATFORM_KEYS.includes(value)) invalid('parent_platforms contém uma plataforma inválida.');
             if (!/^[a-z0-9-]+(,[a-z0-9-]+)*$/i.test(value)) invalid(`${name} deve conter IDs ou slugs separados por vírgula.`);
             params[name] = value;
         }
