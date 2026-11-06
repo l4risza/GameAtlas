@@ -19,7 +19,7 @@ export default function Home() {
                 {!loading && !error && <>
                     <Carousel games={resolveCategory('emAlta').slice(0, 5)} />
                     <GameSection title="Em alta" games={resolveCategory('emAlta')} seeMoreTo={categoryExploreLink('emAlta')} />
-                    <GameSection title="Melhores avaliados no Metacritic" games={resolveCategory('melhoresAv')} seeMoreTo={categoryExploreLink('melhoresAv')} />
+                    <p className="rawg-credit">Dados e imagens de jogos fornecidos pela <a href="https://www.igdb.com" target="_blank" rel="noreferrer">IGDB</a>.</p>
                     <GameSection title="Lançamentos recentes" games={resolveCategory('lancamentos')} seeMoreTo={categoryExploreLink('lancamentos')} />
                     <PlatformSection title="Plataformas" />
                 </>}

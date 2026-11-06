@@ -1,14 +1,14 @@
 import PlatformCard from './PlatformCard';
 
 const PLATFORM_ITEMS = [
-    { id: '1', label: 'PC', icon: 'bi-windows' },
-    { id: '2', label: 'PlayStation', icon: 'bi-playstation' },
-    { id: '3', label: 'Xbox', icon: 'bi-xbox' },
-    { id: '7', label: 'Nintendo', icon: 'bi-nintendo-switch' },
-    { id: '4,8', label: 'Celular', icon: 'bi-phone' },
-    { id: '5,6', label: 'Mac e Linux', icon: 'bi-apple' },
-    { id: '14', label: 'Navegador', icon: 'bi-globe' },
-    { id: '11', label: 'SEGA', icon: 'bi-joystick' }
+    { id: 'pc', label: 'PC', icon: 'bi-windows' },
+    { id: 'playstation', label: 'PlayStation', icon: 'bi-playstation' },
+    { id: 'xbox', label: 'Xbox', icon: 'bi-xbox' },
+    { id: 'nintendo', label: 'Nintendo', icon: 'bi-nintendo-switch' },
+    { id: 'mobile', label: 'Celular', icon: 'bi-phone' },
+    { id: 'mac-linux', label: 'Mac e Linux', icon: 'bi-apple' },
+    { id: 'web', label: 'Navegador', icon: 'bi-globe' },
+    { id: 'sega', label: 'SEGA', icon: 'bi-joystick' },
 ];
 
 export default function PlatformSection({ title = 'Plataformas' }) {

@@ -111,7 +111,7 @@ export function normalizeGame(game) {
         id: game.id,
         slug: game.slug || '',
         title: game.name || 'Jogo sem título',
-        image: image(game.cover, 'cover_big'),
+        image: image(wide, 'screenshot_big') || image(game.cover, 'cover_big'),
         banner: image(wide, '1080p') || image(game.cover, 'cover_big'),
         description: game.summary || '',
         rating: hasRating ? Math.round(game.rating) / 10 : null,

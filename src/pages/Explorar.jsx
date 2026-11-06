@@ -10,7 +10,7 @@ import '../styles/components.css';
 import '../styles/api.css';
 
 const SECTIONS = [
-    ['emAlta', 'Em alta'], ['melhoresAv', 'Melhores avaliados no Metacritic'],
+    ['emAlta', 'Em alta'], ['melhoresAv', 'Melhores avaliados no pela crítica'],
     ['lancamentos', 'Lançamentos recentes'], ['classicos', 'Clássicos'],
     ['indie', 'Indie'], ['multiplayer', 'Multiplayer'],
 ];

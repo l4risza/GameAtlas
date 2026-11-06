@@ -11,7 +11,7 @@ import '../styles/components.css';
 import '../styles/api.css';
 import '../styles/Jogo.css';
 
-/* Extras opcionais por slug. Sobrescrevem a mídia da RAWG (arquivos em public/). */
+/* Extras opcionais por slug. Sobrescrevem a mídia da IGDB (arquivos em public/). */
 const GAME_EXTRAS = {
     deltarune: {
         longDescription:
@@ -61,11 +61,6 @@ const formatTime = (seconds) => {
     const rest = Math.floor(seconds % 60).toString().padStart(2, '0');
     return `${minutes}:${rest}`;
 };
-
-function genreSlug(name = '') {
-    const n = name.trim().toLowerCase();
-    return GENRES.find(([slug, label]) => label.toLowerCase() === n || slug === n.replace(/\s+/g, '-'))?.[0] || '';
-}
 
 /* ---------------- avaliação em estrelas (estilo Google Play) ---------------- */
 const formatStars = (value) => value.toFixed(1).replace('.', ',');
@@ -141,6 +136,7 @@ function MediaCarousel({ items, alt, onVideoError }) {
     const total = items.length;
     const single = total === 1;
     const isVideo = items[current].type === 'video';
+    const isYoutube = items[current].type === 'youtube';
     const showControls = isVideo && (hover || paused);
     const percent = time.total ? (time.now / time.total) * 100 : 0;
     const goTo = (index) => setCurrent((index + total) % total);
@@ -192,14 +188,16 @@ function MediaCarousel({ items, alt, onVideoError }) {
 
     // imagens avançam sozinhas; o trailer avança quando termina
     useEffect(() => {
-        if (single || isVideo) return undefined;
+        if (single || isVideo || isYoutube) return undefined;
         const timer = setTimeout(() => setCurrent((c) => (c + 1) % total), 6000);
         return () => clearTimeout(timer);
-    }, [current, single, isVideo, total]);
+    }, [current, single, isVideo, isYoutube, total]);
+
 
     // toca o trailer ao entrar nele e reinicia ao sair
     useEffect(() => {
         const video = videoRef.current;
+        if (single || isVideo || items[current].type === 'youtube') return undefined;
         if (!video) return;
         if (isVideo) {
             video.play().catch(() => { });
@@ -262,6 +260,20 @@ function MediaCarousel({ items, alt, onVideoError }) {
                                 onTimeUpdate={(e) => setTime({ now: e.currentTarget.currentTime, total: e.currentTarget.duration || 0 })}
                                 onEnded={() => goTo(current + 1)}
                                 onError={onVideoError}
+                            />
+                        );
+                    }
+                    if (item.type === 'youtube') {
+                        if (index !== current) return null;
+                        return (
+                            <iframe
+                                key={item.src}
+                                src={item.src}
+                                title="Trailer do jogo"
+                                className="active"
+                                allow="encrypted-media; picture-in-picture; fullscreen"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
                             />
                         );
                     }
@@ -357,16 +369,16 @@ function MediaCarousel({ items, alt, onVideoError }) {
                             <div
                                 key={item.src}
                                 ref={(el) => { thumbRefs.current[index] = el; }}
-                                className={`thumb${index === current ? ' active' : ''}${item.type === 'video' ? ' is-video' : ''}`}
+                                className={`thumb${index === current ? ' active' : ''}${item.type !== 'image' ? ' is-video' : ''}`}
                                 onClick={() => goTo(index)}
                             >
                                 <img
-                                    src={item.type === 'video' ? (item.poster || PLACEHOLDER) : item.src}
+                                    src={item.type !== 'image' ? (item.poster || PLACEHOLDER) : item.src}
                                     alt=""
                                     loading="lazy"
                                     onError={fallbackImg}
                                 />
-                                {item.type === 'video' && <i className="bi bi-play-circle-fill"></i>}
+                                {item.type !== 'image' && <i className="bi bi-play-circle-fill"></i>}
                             </div>
                         ))}
                     </div>
@@ -402,11 +414,11 @@ function GameDetails({ game, reload }) {
     const extras = GAME_EXTRAS[game.slug] || {};
     const [videoFailed, setVideoFailed] = useState(false);
 
-    const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.rawg_rating;
-    const criticScore = extras.criticScore ?? game.metacritic;
+    const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.public_stars;
+    const criticScore = extras.criticScore ?? game.critic_score;
     const tags = extras.tags || [...(game.genres || []), game.multiplayer && 'Multiplayer'].filter(Boolean);
     const unavailable = game.description_translation === 'unavailable';
-    const fullDescription = game.description || 'Descrição não disponível na RAWG.';
+    const fullDescription = game.description || 'Descrição não disponível.';
 
     const infoList = [
         ['Gênero', game.genre],
@@ -423,12 +435,21 @@ function GameDetails({ game, reload }) {
         const items = [];
 
         if (trailer?.src && !videoFailed) items.push({ type: 'video', src: trailer.src, poster: trailer.poster || cover });
+
+        if (trailer?.youtubeId) {
+            items.push({
+                type: 'youtube',
+                src: `https://www.youtube-nocookie.com/embed/${trailer.youtubeId}`,
+                poster: `https://img.youtube.com/vi/${trailer.youtubeId}/hqdefault.jpg`,
+            });
+        }
+
         [...new Set(shots)].forEach((src) => items.push({ type: 'image', src }));
         if (!items.some((item) => item.type === 'image')) items.push({ type: 'image', src: cover || PLACEHOLDER });
         return items;
     }, [extras, game.trailer, game.screenshots, game.banner, game.image, videoFailed]);
 
-    const slug = genreSlug(game.genres?.[0]);
+    const slug = game.genre_slugs?.[0];
 
     return (
         <div className="top-container">
