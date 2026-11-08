@@ -12,10 +12,10 @@ export const reviewView = (row) => ({
     date: new Date(row.atualizado_em).toLocaleDateString('pt-BR')
 });
 
-export async function loadReviews(page = 1, userId, rawgId, order = 'recentes') {
+export async function loadReviews(page = 1, userId, rawgId, order = 'recentes', excludeUserId) {
     let query = database().from('reviews').select(REVIEW_COLUMNS, { count: 'exact' });
     if (userId) query = query.eq('usuario_id', userId);
-    if (rawgId) query = query.eq('jogos.rawg_id', rawgId);
+    if (excludeUserId) query = query.neq('usuario_id', excludeUserId);
     const { data, count } = await resultOf(query.order('atualizado_em', { ascending: order === 'antigas' })
         .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1));
     return { items: data.map(reviewView), count };

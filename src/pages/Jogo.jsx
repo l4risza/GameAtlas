@@ -6,7 +6,6 @@ import ApiFeedback from '../components/ApiFeedback';
 import GameAccount, { GameSaveButton } from '../components/GameAccount';
 import { useGame } from '../hooks/useGame';
 import { useGames } from '../hooks/useGames';
-import { GENRES } from '../services/search-options';
 import '../styles/components.css';
 import '../styles/api.css';
 import '../styles/Jogo.css';
@@ -37,6 +36,8 @@ const GAME_EXTRAS = {
             'A trilha sonora é composta pelo próprio Toby Fox, com músicas marcantes que reforçam a emoção e a identidade do jogo.',
     },
 };
+// Referência estável para jogos sem extras (evita recriar o useMemo a cada render).
+const NO_EXTRAS = {};
 
 /* ---------------- helpers ---------------- */
 const PLATFORM_ICONS = [
@@ -197,7 +198,6 @@ function MediaCarousel({ items, alt, onVideoError }) {
     // toca o trailer ao entrar nele e reinicia ao sair
     useEffect(() => {
         const video = videoRef.current;
-        if (single || isVideo || items[current].type === 'youtube') return undefined;
         if (!video) return;
         if (isVideo) {
             video.play().catch(() => { });
@@ -205,7 +205,7 @@ function MediaCarousel({ items, alt, onVideoError }) {
             video.pause();
             video.currentTime = 0;
         }
-    }, [isVideo]);
+    }, [isVideo])
 
     // mantém a miniatura ativa centralizada sem rolar a página
     useEffect(() => {
@@ -304,7 +304,7 @@ function MediaCarousel({ items, alt, onVideoError }) {
                             <i className="bi bi-chevron-right"></i>
                         </button>
 
-                        <div className={`carousel-dots${isVideo ? ' above-controls' : ''}`}>
+                        <div className={`carousel-dots${isVideo || isYoutube ? ' above-controls' : ''}`}>
                             {total <= MAX_DOTS ? items.map((item, index) => (
                                 <button
                                     key={item.src}
@@ -411,7 +411,7 @@ function SimilarGames({ gameId, genre }) {
 
 /* ---------------- conteúdo da página ---------------- */
 function GameDetails({ game, reload }) {
-    const extras = GAME_EXTRAS[game.slug] || {};
+    const extras = GAME_EXTRAS[game.slug] || NO_EXTRAS;
     const [videoFailed, setVideoFailed] = useState(false);
 
     const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.public_stars;
@@ -535,7 +535,7 @@ function GameDetails({ game, reload }) {
                 <div className="col-right-bottom">
                     <div className="box-right">
                         <h2>Plataformas</h2>
-                        <div className="platforms">
+                        <div className="game-platforms">
                             {(game.platforms?.length ? game.platforms : [game.platform]).map((p) => (
                                 <span key={p}><i className={`bi ${platformIcon(p)}`}></i> {p}</span>
                             ))}

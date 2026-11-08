@@ -1,6 +1,7 @@
 /* ---- PÁGINA + FAIXA ROXA DO TOPO ---- */
 .game-page {
     position: relative;
+    color: var(--color-text, #F5F3FF);
 }
 
 .game-hero-band {

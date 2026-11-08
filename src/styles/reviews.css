@@ -252,3 +252,130 @@
         width: 100%;
     }
 }
+
+/* ---- CAIXA "MINHA AVALIAÇÃO" (topo da aba Reviews de um jogo) ---- */
+.account-page .review-box {
+    max-width: 640px;
+    margin: 0 auto 2rem;
+    padding: 1.2rem 1.5rem 1.4rem;
+    text-align: center;
+    color: #F5F3FF;
+    border: 1px solid #7c3aed;
+    border-radius: 16px;
+    background: #1d1033;
+    box-shadow: 0 0 18px rgba(147, 51, 234, .2);
+}
+
+.review-box h2 {
+    margin: 0 0 .8rem;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.review-box p {
+    color: #ddd;
+}
+
+.account-page .review-box a {
+    color: #E9D5FF;
+}
+
+.review-box-form {
+    display: grid;
+    gap: 1rem;
+    text-align: left;
+}
+
+.star-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+}
+
+.star-input button {
+    padding: .1rem;
+    border: 0;
+    background: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #6b4a9e;
+    cursor: pointer;
+    transition: transform .15s ease, color .15s ease;
+}
+
+.star-input button:hover {
+    transform: scale(1.15);
+}
+
+.star-input button.on {
+    color: #FACC15;
+    filter: drop-shadow(0 0 6px rgba(250, 204, 21, .35));
+}
+
+.star-input span {
+    min-width: 7.5rem;
+    margin-left: .8rem;
+    text-align: left;
+    font-size: .95rem;
+    color: #C4B5FD;
+}
+
+.review-box-label {
+    display: grid;
+    gap: .4rem;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #E9D5FF;
+}
+
+.review-box-label textarea {
+    width: 100%;
+    padding: .7rem .9rem;
+    border: 1px solid #7c3aed;
+    border-radius: 10px;
+    background: #140a28;
+    color: #F5F3FF;
+    font: inherit;
+    font-weight: 400;
+    resize: vertical;
+}
+
+.review-box-label textarea::placeholder {
+    color: #8f7bb8;
+}
+
+.review-box-label textarea:focus-visible {
+    outline: 2px solid #A855F7;
+    outline-offset: 1px;
+}
+
+.review-box-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .7rem;
+}
+
+.review-box-msg {
+    margin: .4rem 0;
+}
+
+.review-box-msg.ok {
+    color: #86efac;
+}
+
+.review-box-link {
+    margin: .9rem 0 0;
+    font-size: .9rem;
+}
+
+.reviews-section-title {
+    max-width: 1050px;
+    margin: 1.6rem auto .8rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #B39EB5;
+}

@@ -10,6 +10,10 @@ const translations = createTranslationService();
 const igdb = createIgdbService({
     clientId: config.twitchClientId,
     clientSecret: config.twitchClientSecret,
+    translateDescription: translations.translateDescription,
+    onDiagnostic: ({ endpoint, attempt, status, code, retrying }) => {
+        console.warn(`[IGDB] ${endpoint}: tentativa=${attempt} status=${status ?? 'rede'} código=${code} repetir=${retrying}`);
+    },
 });
 const supabaseService = createSupabaseService({
     url: config.supabaseUrl,
