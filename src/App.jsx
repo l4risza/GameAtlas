@@ -36,6 +36,7 @@ function App() {
             <Route path="/esqueci-senha" element={<EsqueciSenha />} />
             <Route path="/redefinir-senha" element={<RedefinirSenha />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/perfil/:id" element={<Perfil />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/jogo/:id" element={<Jogo />} />
             <Route path="*" element={<Placeholder titulo="Página não encontrada" />} />

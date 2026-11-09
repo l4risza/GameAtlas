@@ -1,5 +1,6 @@
 import { accountError, database, resultOf } from './supabase';
 import { checkAvatarFile } from './settings-validation';
+import { loadFavoriteGames, saveFavoriteGames } from './favorite-games';
 
 const BASE_COLUMNS = 'id,nome,username,avatar_url,bio';
 // Colunas criadas pela migração 20261014000100_configuracoes.sql.
@@ -38,15 +39,22 @@ export async function isUsernameAvailable(username) {
 // Carrega o perfil em duas consultas: se a migração das configurações ainda não foi aplicada,
 // as colunas extras não existem e a tela continua funcionando só com os campos básicos.
 export async function loadSettingsProfile(userId) {
-    const { data: profile } = await resultOf(database().from('perfis').select(BASE_COLUMNS).eq('id', userId).single());
+    const { data: profile } = await resultOf(database().from('perfis').select(BASE_COLUMNS).eq('id', userId).maybeSingle());
+    if (!profile) throw new Error('Este perfil não existe ou não está disponível.');
     const extra = await database().from('perfis').select(EXTRA_COLUMNS).eq('id', userId).single();
     const missingColumns = extra.error && (extra.error.code === '42703' || /does not exist/i.test(extra.error.message ?? ''));
     if (extra.error && !missingColumns) throw new Error(accountError(extra.error));
-    return { profile, extras: extra.error ? null : extra.data };
+    const extras = extra.error ? null : extra.data;
+    if (extras) extras.jogos_favoritos = [...await loadFavoriteGames(userId), ...extras.jogos_favoritos];
+    return { profile, extras };
 }
 
 // Devolve os valores gravados (as mesmas chaves de "fields") para a tela se atualizar sem recarregar.
 export async function updateProfile(userId, fields) {
+    if (Object.hasOwn(fields, 'jogos_favoritos')) {
+        if (Object.keys(fields).length !== 1) throw new Error('Salve os jogos favoritos separadamente.');
+        return { jogos_favoritos: await saveFavoriteGames(fields.jogos_favoritos) };
+    }
     const columns = Object.keys(fields).join(',');
     const { data } = await resultOf(database().from('perfis').update(fields).eq('id', userId).select(columns).single());
     return data;

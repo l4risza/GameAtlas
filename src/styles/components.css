@@ -1026,7 +1026,7 @@ hr {
 }
  
 .review-stars {
-    color: var(--color-accent);
+    color: var(--star-color, #FACC15);
     margin: 0.3rem 0 0.6rem;
 }
  

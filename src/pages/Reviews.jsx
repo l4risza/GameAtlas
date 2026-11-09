@@ -20,7 +20,8 @@ export default function Reviews() {
     const userId = user?.id;
     const rawgId = positiveInt(params.get('jogo'));
     const page = positiveInt(params.get('page'), 10000) ?? 1;
-    const order = params.get('ordem') === 'antigas' ? 'antigas' : 'recentes';
+    const requestedOrder = params.get('ordem');
+    const order = requestedOrder === 'antigas' ? 'antigas' : requestedOrder === 'populares' ? 'populares' : 'recentes';
     const mine = params.get('aba') === 'minhas';
 
     // Monta a URL mantendo o filtro de jogo; mudar aba/ordem volta para a página 1.
@@ -28,7 +29,7 @@ export default function Reviews() {
         const next = {
             ...(rawgId ? { jogo: String(rawgId) } : {}),
             ...(mine ? { aba: 'minhas' } : {}),
-            ...(order === 'antigas' ? { ordem: 'antigas' } : {}),
+            ...(order !== 'recentes' ? { ordem: order } : {}),
             ...changes,
         };
         return Object.fromEntries(Object.entries(next).filter(([, value]) => value));
@@ -38,8 +39,7 @@ export default function Reviews() {
     const load = useCallback(async () => {
         if (authLoading || (mine && !userId)) return null;
         const [reviews, game] = await Promise.all([
-            // Na página de um jogo, a sua avaliação fica na caixa do topo; aqui só aparecem as dos outros jogadores.
-            loadReviews(page, mine ? userId : undefined, rawgId, order, rawgId && !mine ? userId : undefined),
+            loadReviews(page, mine ? userId : undefined, rawgId, order),
             rawgId ? findGame(rawgId).catch(() => null) : Promise.resolve(null),
         ]);
         return { ...reviews, game };
@@ -48,7 +48,7 @@ export default function Reviews() {
 
     const emptyText = mine
         ? 'Você ainda não avaliou nenhum jogo. Abra um jogo e deixe sua nota.'
-        : rawgId ? 'Nenhum outro jogador avaliou este jogo ainda.' : 'Ainda não há reviews.';
+        : rawgId ? 'Nenhum jogador avaliou este jogo ainda.' : 'Ainda não há reviews.';
 
     return (
         <AccountLayout title="" requireLogin={mine}>
@@ -78,9 +78,9 @@ export default function Reviews() {
                     {rawgId && <p className="reviews-sub">{data?.game?.nome || 'Este jogo'}</p>}
                     <hr />
 
-                    {rawgId && <GameReviewBox rawgId={rawgId} />}
+                    {rawgId && <GameReviewBox rawgId={rawgId} onChanged={reload} />}
 
-                    {rawgId && <h2 className="reviews-section-title">Reviews dos outros jogadores</h2>}
+                    {rawgId && <h2 className="reviews-section-title">Reviews dos jogadores</h2>}
 
                     <div className="reviews-toolbar">
                         <span>{rawgId && <Link to="/reviews">Ver todas as reviews</Link>}</span>
@@ -88,6 +88,7 @@ export default function Reviews() {
                             <select className="account-select" value={order}
                                 onChange={(event) => setParams(query({ ordem: event.target.value === 'antigas' ? 'antigas' : '' }))}>
                                 <option value="recentes">Mais recentes</option>
+                                <option value="populares">Mais populares</option>
                                 <option value="antigas">Mais antigas</option>
                             </select>
                         </label>

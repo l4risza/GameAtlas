@@ -4,6 +4,9 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ApiFeedback from '../components/ApiFeedback';
 import GameAccount, { GameSaveButton } from '../components/GameAccount';
+import GameReviews from '../components/GameReviews';
+import CommunityRating from '../components/CommunityRating';
+import { ratingColor } from '../services/rating-color';
 import { useGame } from '../hooks/useGame';
 import { useGames } from '../hooks/useGames';
 import '../styles/components.css';
@@ -69,17 +72,16 @@ const formatStars = (value) => value.toFixed(1).replace('.', ',');
 function Stars({ value }) {
     const clamped = Math.max(0, Math.min(5, value));
     return (
-        <span className="stars" role="img" aria-label={`${formatStars(clamped)} de 5 estrelas`}>
+        <span className="stars" role="img" aria-label={`${formatStars(clamped)} de 5 estrelas`} style={{ '--star-color': ratingColor(clamped) }}>
             <span className="stars-base" aria-hidden="true">★★★★★</span>
             <span className="stars-fill" aria-hidden="true" style={{ width: `${(clamped / 5) * 100}%` }}>★★★★★</span>
         </span>
     );
 }
 
-function RatingSummary({ publicStars, criticScore, ratings, count }) {
+function RatingSummary({ publicStars, criticScore, ratings, count, gameId }) {
     const hasPublic = typeof publicStars === 'number' && publicStars > 0;
     const hasCritic = typeof criticScore === 'number';
-    if (!hasPublic && !hasCritic) return null;
 
     return (
         <div className="rating">
@@ -89,7 +91,7 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
                         <strong>{formatStars(publicStars)}</strong>
                         <Stars value={publicStars} />
                         <span className="rating-count">
-                            {count ? `${count.toLocaleString('pt-BR')} avaliações` : 'Avaliação do público'}
+                            {count ? `${count.toLocaleString('pt-BR')} avaliações na IGDB` : 'Avaliação do público na IGDB'}
                         </span>
                     </div>
 
@@ -109,6 +111,7 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
                 </div>
             )}
 
+            <div className="rating-comparison">
             {hasCritic && (
                 <div className="rating-critics">
                     <span>Críticos</span>
@@ -116,6 +119,8 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
                     <strong>{criticScore}</strong><small>/100</small>
                 </div>
             )}
+            <CommunityRating gameId={gameId} />
+            </div>
         </div>
     );
 }
@@ -495,6 +500,7 @@ function GameDetails({ game, reload }) {
 
                 {/* avaliar o jogo e adicionar às listas (conta do usuário) */}
                 <GameAccount game={game} />
+                <GameReviews key={game.id} gameId={game.id} />
             </div>
 
             {/* COLUNA DIREITA */}
@@ -519,6 +525,7 @@ function GameDetails({ game, reload }) {
                     <div className="tags">{tags.map((t) => <span key={t}>{t}</span>)}</div>
 
                     <RatingSummary
+                        gameId={game.id}
                         publicStars={publicStars}
                         criticScore={criticScore}
                         ratings={game.ratings}

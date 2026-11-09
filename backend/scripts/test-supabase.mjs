@@ -59,6 +59,20 @@ try {
     assert.equal(response.status, 200, 'Vinculação IGDB falhou');
     const game = await response.json(); gameId = game.id;
     assert.equal(game.provider,'igdb'); assert.equal(game.external_id,1020); assert.equal(game.rawg_id, 1020); assert.ok(game.nome.includes('Grand Theft Auto'));
+    await result(a.client.rpc('salvar_favoritos_igdb', { jogos: [game.id], legados: [] }));
+    const favoriteQuery = () => visitor.from('perfil_jogos_favoritos')
+        .select('usuario_id,jogos!inner(rawg_id,nome)').eq('usuario_id', a.id);
+    const favorites = await result(favoriteQuery());
+    assert.equal(favorites.data.length, 1); assert.equal(favorites.data[0].jogos.rawg_id, 1020);
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: [game.id,game.id], legados: [] })).error?.code,'22023');
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: Array(6).fill(game.id), legados: [] })).error?.code,'22023');
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: [Number.MAX_SAFE_INTEGER], legados: [] })).error?.code,'23503');
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: [], legados: ['Texto inventado'] })).error?.code,'22023');
+    await result(b.client.rpc('salvar_favoritos_igdb', { jogos: [], legados: [] }));
+    assert.equal((await result(favoriteQuery())).data.length,1,'Gravação de outro usuário ou falha alterou favoritos do dono');
+    assert.ok((await b.client.from('perfil_jogos_favoritos').insert({usuario_id:a.id,jogo_id:game.id,posicao:1})).error);
+    await result(a.client.rpc('salvar_favoritos_igdb', { jogos: [], legados: [] }));
+    assert.equal((await result(favoriteQuery())).data.length,0);
     const again = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${b.token}` } });
     assert.equal((await again.json()).id, gameId);
 
@@ -102,6 +116,24 @@ try {
     const filtered = await result(visitor.from('reviews').select('id,jogos!inner(rawg_id)', { count: 'exact' })
         .eq('jogos.rawg_id', 1020).eq('usuario_id', a.id).range(0, 11));
     assert.equal(filtered.count, 1); assert.equal(filtered.data[0].id, review.id);
+    const summary = await result(visitor.rpc('resumo_avaliacoes_jogo', { igdb_id: 1020 }));
+    assert.ok(summary.data.count>=1); assert.ok(summary.data.average>=1 && summary.data.average<=5);
+    const otherSummary = await result(visitor.rpc('resumo_avaliacoes_jogo', { igdb_id: 9000000000000002 }));
+    assert.equal(otherSummary.data.count,1); assert.equal(otherSummary.data.average,3);
+    const secondVote=await result(b.client.from('reviews').insert({jogo_id:otherGameId,nota:5}).select('id').single());
+    const sharedSummary=await result(visitor.rpc('resumo_avaliacoes_jogo',{igdb_id:9000000000000002}));
+    assert.equal(sharedSummary.data.count,2);assert.equal(sharedSummary.data.average,4);
+    await result(b.client.from('reviews').update({nota:1}).eq('id',secondVote.data.id));
+    assert.equal((await result(visitor.rpc('resumo_avaliacoes_jogo',{igdb_id:9000000000000002}))).data.average,2);
+    await result(b.client.from('review_curtidas').insert({review_id:review.id}));
+    const ranked = await result(visitor.from('reviews').select('id,curtidas,jogos!inner(rawg_id)')
+        .eq('usuario_id',a.id).eq('jogos.rawg_id',1020).order('curtidas',{ascending:false}));
+    assert.equal(ranked.data.length,1); assert.equal(ranked.data[0].curtidas,1);
+    const ownLikes = await result(b.client.from('review_curtidas').select('review_id').in('review_id',[review.id]));
+    assert.equal(ownLikes.data.length,1);
+    assert.equal((await a.client.from('review_curtidas').select('review_id').in('review_id',[review.id])).data.length,0);
+    await result(b.client.from('review_curtidas').delete().eq('review_id',review.id));
+    assert.equal((await result(visitor.from('reviews').select('curtidas').eq('id',review.id).single())).data.curtidas,0);
     await result(a.client.from('reviews').delete().eq('id', review.id));
     await result(a.client.from('listas').delete().eq('id', list.id));
     assert.equal((await result(a.client.from('lista_jogos').select('jogo_id').eq('lista_id', list.id))).data.length, 0);
@@ -118,4 +150,4 @@ try {
         if (cleanup.error && cleanup.error.code !== '23503') throw new Error('Falha ao limpar o jogo de teste.');
     }
 }
-if (passed) console.log('OK: login, perfil, vínculo IGDB, listas públicas/privadas, notas sem comentário, Jogos Salvos e isolamento entre usuários. Contas e dados sintéticos removidos.');
+if (passed) console.log('OK: login, perfil, vínculo IGDB, favoritos reais/limites, listas públicas/privadas, notas sem comentário, filtro de jogo, curtidas, média da comunidade, Jogos Salvos e isolamento. Contas e dados sintéticos removidos.');

@@ -309,7 +309,7 @@
 }
 
 .star-input button.on {
-    color: #FACC15;
+    color: var(--star-color, #FACC15);
     filter: drop-shadow(0 0 6px rgba(250, 204, 21, .35));
 }
 

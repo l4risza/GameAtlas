@@ -6,6 +6,7 @@ import { loadGameAccount, loadLists, saveGame, removeSaved, saveReview, deleteRe
 import { accountError } from '../services/supabase';
 import { Pagination } from './AccountLayout';
 import ApiFeedback from './ApiFeedback';
+import { ratingColor } from '../services/rating-color';
 import '../styles/account.css';
 
 /* ---------------- avaliação (aba Reviews do jogo) ---------------- */
@@ -13,7 +14,7 @@ function StarInput({ value, onChange }) {
     const [hover, setHover] = useState(0);
     const shown = hover || value;
     return (
-        <div className="star-input" role="radiogroup" aria-label="Nota" onMouseLeave={() => setHover(0)}>
+        <div className="star-input" role="radiogroup" aria-label="Nota" onMouseLeave={() => setHover(0)} style={{ '--star-color': ratingColor(shown) }}>
             {[1, 2, 3, 4, 5].map((note) => (
                 <button
                     key={note}
@@ -51,7 +52,7 @@ function ReviewForm({ review, busy, onSave, onDelete }) {
     );
 }
 
-function SignedReviewBox({ rawgId, userId }) {
+function SignedReviewBox({ rawgId, userId, onChanged }) {
     const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState('');
     const [actionError, setActionError] = useState('');
@@ -60,7 +61,7 @@ function SignedReviewBox({ rawgId, userId }) {
 
     async function run(action, message) {
         setBusy(true); setActionError(''); setNotice('');
-        try { await action(); setNotice(message); reload(); }
+        try { await action(); setNotice(message); reload(); onChanged?.(); }
         catch (e) { setActionError(accountError(e)); } finally { setBusy(false); }
     }
 
@@ -84,7 +85,7 @@ function SignedReviewBox({ rawgId, userId }) {
     );
 }
 
-export function GameReviewBox({ rawgId }) {
+export function GameReviewBox({ rawgId, onChanged }) {
     const { user, loading, configured } = useAuth();
     if (!configured) return null;
     if (loading) return <p role="status">Carregando sua conta...</p>;
@@ -96,7 +97,7 @@ export function GameReviewBox({ rawgId }) {
             </section>
         );
     }
-    return <SignedReviewBox key={`${rawgId}:${user.id}`} rawgId={rawgId} userId={user.id} />;
+    return <SignedReviewBox key={`${rawgId}:${user.id}`} rawgId={rawgId} userId={user.id} onChanged={onChanged} />;
 }
 
 /* ---------------- listas (página do jogo) ---------------- */

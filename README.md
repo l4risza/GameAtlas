@@ -4,6 +4,8 @@ Projeto de TCC com front-end React/Vite, API Node.js/Express conectada à [IGDB]
 
 A fonte de jogos foi migrada da RAWG para a IGDB. O [relatório da migração](docs/auditoria-igdb.md) registra o motivo técnico, as mudanças, os testes e as pendências. A auditoria de 09/11/2026 preservou integralmente os arquivos do front-end da branch `gameatlasIGDB`.
 
+Após essa auditoria, foram autorizados ajustes específicos na interface de [favoritos, listas, reviews e perfis](docs/favoritos-comunidade.md), com média da comunidade GameAtlas e curtidas. O documento registra também as duas migrações adicionais necessárias para esses recursos.
+
 ## Executar no VS Code
 
 Abra a pasta do clone atual e execute no terminal:

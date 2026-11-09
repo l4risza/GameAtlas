@@ -549,7 +549,7 @@
     top: 0;
     left: 0;
     overflow: hidden;
-    color: #FACC15;
+    color: var(--star-color, #FACC15);
     text-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
 }
 
@@ -615,6 +615,13 @@
     color: #B39EB5;
     margin-left: -6px;
 }
+
+.rating-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rating-comparison .rating-critics { flex-wrap: wrap; align-content: center; }
+.rating-community .rating-count { width: 100%; }
+.rating-community small { margin-left: 0; }
+.rating-community button { color: inherit; background: transparent; border: 0; cursor: pointer; text-decoration: underline; }
+@media (max-width: 480px) { .rating-comparison { grid-template-columns: 1fr; } }
 
 /* ---- LINK DO SITE OFICIAL ---- */
 .site-link {
