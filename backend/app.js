@@ -82,7 +82,7 @@ export function createApp({ igdb, supabaseService, accountService, corsOrigins =
             return res.status(400).json({ erro: 'Dados inválidos.', code: 'INVALID_BODY' });
         }
         const known = error instanceof ApiError;
-        if (!known) console.error('[API] Erro inesperado:', error);
+
         res.status(known ? error.status : 500).json({
             erro: known ? error.message : 'Erro interno ao processar a solicitação.',
             code: known ? error.code : 'INTERNAL_ERROR',

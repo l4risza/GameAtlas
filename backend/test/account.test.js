@@ -100,7 +100,7 @@ test('falha posterior no Auth mantém o bloqueio de dados e não expõe o erro p
     assert.equal(f.state.inactive,true);
 });
 test('rotas novas recebem apenas as operações previstas e recusam JSON inválido',async(t)=>{
-    const f=fixture(); const server=createApp({rawg:{},accountService:f.service}).listen(0,'127.0.0.1');
+    const f=fixture(); const server=createApp({igdb:{},accountService:f.service}).listen(0,'127.0.0.1');
     await once(server,'listening'); t.after(()=>new Promise(resolve=>server.close(resolve)));
     const url=`http://127.0.0.1:${server.address().port}/api`;
     assert.equal((await fetch(url+'/usuarios/disponibilidade?username=Ana_01')).status,200);

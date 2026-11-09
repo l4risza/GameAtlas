@@ -17,12 +17,12 @@ begin
   if (select count(*) from public.perfis where id in (
     current_setting('gameatlas.test_owner')::uuid, current_setting('gameatlas.test_other')::uuid
   )) <> 2 then raise exception 'O cadastro não criou os dois perfis'; end if;
-  insert into public.jogos (rawg_id, nome) values (9000000000000001, 'Jogo sintético A') returning id into g;
+  insert into public.jogos (provider, rawg_id, nome) values ('igdb', 9000000000000001, 'Jogo sintético A') returning id into g;
   perform set_config('gameatlas.test_game_a', g::text, true);
-  insert into public.jogos (rawg_id, nome) values (9000000000000002, 'Jogo sintético B') returning id into g;
+  insert into public.jogos (provider, rawg_id, nome) values ('igdb', 9000000000000002, 'Jogo sintético B') returning id into g;
   perform set_config('gameatlas.test_game_b', g::text, true);
   begin
-    insert into public.jogos (rawg_id, nome) values (9000000000000001, 'Duplicado');
+    insert into public.jogos (provider, rawg_id, nome) values ('igdb', 9000000000000001, 'Duplicado');
     raise exception 'rawg_id duplicado foi aceito';
   exception when unique_violation then null;
   end;
@@ -160,8 +160,8 @@ begin
   exception when insufficient_privilege then null;
   end;
   begin
-    insert into public.jogos (rawg_id, nome) values (9000000000000003, 'Cadastro indevido');
-    raise exception 'Cliente alterou o catálogo RAWG';
+    insert into public.jogos (provider, rawg_id, nome) values ('igdb', 9000000000000003, 'Cadastro indevido');
+    raise exception 'Cliente alterou o catálogo de jogos';
   exception when insufficient_privilege then null;
   end;
   insert into public.jogos_salvos (jogo_id) values (current_setting('gameatlas.test_game_b')::bigint);

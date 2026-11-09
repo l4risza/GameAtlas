@@ -7,7 +7,7 @@ import { translate } from '@vitalets/google-translate-api';
 const LANGUAGE_HEADING = /^(english|español|spanish|portugu[eê]s(?:\s*\((?:brasil|br)\))?|portuguese(?:\s*\(brazil\))?|français|french|deutsch|german|italiano|italian|русский|russian|日本語|japanese|한국어|korean|简体中文|繁體中文|chinese)\s*:?$/i;
 const PORTUGUESE_HEADING = /^(portugu[eê]s|portuguese)/i;
 
-// A RAWG às vezes concatena a descrição inglesa e sua cópia em espanhol.
+// Alguns catálogos concatenam a descrição inglesa e sua cópia em espanhol.
 export function selectDescription(source) {
     const sections = [];
     let section = { heading: '', lines: [] };

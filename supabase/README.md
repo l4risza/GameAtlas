@@ -1,3 +1,13 @@
+# Estado atual — IGDB (09/11/2026)
+
+A API ativa é IGDB. O campo `rawg_id` permanece apenas como alias do contrato React. A migração `20261109000100_igdb.sql` adiciona `provider` e `external_id` e recusa qualquer catálogo não vazio. Nenhuma review/lista é convertida por coincidência de IDs. O rollback estrutural também exige catálogo vazio. Veja [a auditoria](../docs/auditoria-igdb.md) para recuperação e limitações.
+
+Depois das migrações históricas, aplicar, em ordem, `20261109000100_igdb.sql` e `20261109000200_relacoes_igdb.sql`. Ambas foram aplicadas no GameAtlas em 09/11/2026. A segunda exige `provider='igdb'` explícito nas inserções e define a relação computada `perfis(reviews)` com `security invoker`, resolvendo a ambiguidade entre autor e curtidas sem mudar o React. Não executar o backend antigo da main contra este esquema.
+
+Executar como postgres os testes `tests/001_gameatlas.sql`, `tests/002_contas_perfis.sql` e `tests/003_igdb.sql`: usam transações com ROLLBACK. Todos foram aprovados no projeto real. Os scripts em `rollback/` são manuais: ler suas condições antes de usar e interromper os servidores durante qualquer retorno de versão. Não removem avaliações nem listas.
+
+O texto abaixo documenta etapas anteriores do banco; referências a RAWG são históricas.
+
 # Banco GameAtlas
 
 Estrutura inicial para Supabase/PostgreSQL. A autenticação usa `auth.users`, gerenciado pelo Supabase Auth; senhas e e-mails não são copiados para tabelas públicas.

@@ -1,20 +1,22 @@
+import { createIgdbClient } from './igdb-client.js';
+export { createIgdbClient } from './igdb-client.js';
 import { ApiError } from './errors.js';
-const TOKEN_URL = 'https://id.twitch.tv/oauth2/token';
-const IGDB_URL = 'https://api.igdb.com/v4/';
-const MIN_INTERVAL_MS = 260;
 
 const PLATFORM_FILTERS = {
     pc: 'platforms = (6)',
-    playstation: 'platforms.platform_family = 1',
-    xbox: 'platforms.platform_family = 2',
-    nintendo: 'platforms.platform_family = 5',
-    sega: 'platforms.platform_family = 3',
+    playstation: 'platforms.platform_family.slug = "playstation"',
+    xbox: 'platforms.platform_family.slug = "xbox"',
+    nintendo: 'platforms.platform_family.slug = "nintendo"',
+    sega: 'platforms.platform_family.slug = "sega"',
     mobile: 'platforms = (34,39)',
     'mac-linux': 'platforms = (14,3)',
     web: 'platforms = (82)',
 };
 
 const ORDER = {
+    added: 'total_rating_count asc', rating: 'rating asc', metacritic: 'aggregated_rating asc',
+    released: 'first_release_date asc', '-name': 'name desc',
+    created: 'created_at asc', '-created': 'created_at desc', updated: 'updated_at asc', '-updated': 'updated_at desc',
     '-added': 'total_rating_count desc',
     '-rating': 'rating desc',
     '-metacritic': 'aggregated_rating desc',
@@ -24,84 +26,41 @@ const ORDER = {
 const ORDERING_BY_SORT = { popular: '-added', rating: '-rating', recent: '-released', name: 'name' };
 
 const unix = (date) => Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 1000);
-const quoted = (value) => `"${String(value).replace(/["\\]/g, '')}"`;
+const quoted = (value) => JSON.stringify(String(value));
 
-function buildWhere({ genres, tags, dates, parent_platforms, hide_extras }, ordering) {
+function buildWhere({ genres, tags, dates, platforms, developers, metacritic, parent_platforms, hide_extras }, ordering) {
     const rules = [];
-    if (genres) rules.push(`genres.slug = (${genres.split(',').map(quoted).join(',')})`);
-    if (tags) rules.push(`game_modes.slug = ${quoted(tags)}`);
+    const filter=(field,value)=>`${field}${/^\d+(,\d+)*$/.test(value)?'':'.slug'} = (${value.split(',').map(x=>/^\d+$/.test(x)?x:quoted(x)).join(',')})`;
+    if (genres) rules.push(filter('genres',genres));
+    if (platforms) rules.push(filter('platforms',platforms));
+    if (developers) rules.push(`involved_companies.developer = true & ${filter('involved_companies.company',developers)}`);
+    if (metacritic) {const [min,max]=metacritic.split(',');rules.push(`aggregated_rating >= ${min} & aggregated_rating <= ${max}`);}
+    if (tags) rules.push(tags==='multiplayer'?'game_modes.slug = "multiplayer"':filter('keywords',tags));
     if (parent_platforms) rules.push(PLATFORM_FILTERS[parent_platforms]);
     if (dates) {
         const [start, end] = dates.split(',');
-        rules.push(`first_release_date >= ${unix(start)} & first_release_date <= ${unix(end)}`);
+        rules.push(`first_release_date >= ${unix(start)} & first_release_date <= ${unix(end)+86399}`);
     }
-    if (hide_extras) rules.push('parent_game = null & version_parent = null');
+    if (hide_extras) rules.push('game_type.type = ("Main Game","Remake","Remaster") & parent_game = null & version_parent = null');
     if (ordering === '-rating') rules.push('rating_count >= 20');
     if (ordering === '-metacritic') rules.push('aggregated_rating_count >= 3');
     return rules.filter(Boolean).join(' & ');
 }
 
-export function createIgdbClient({ clientId, clientSecret, fetchImpl = fetch,
-    now = Date.now }) {
-    let token = null;
-    let tokenExpires = 0;
-    let queue = Promise.resolve();
-    async function getToken() {
-        if (token && tokenExpires > now()) return token;
-        const params = new URLSearchParams({
-            client_id: clientId, client_secret: clientSecret, grant_type:
-                'client_credentials',
-        });
-        const response = await fetchImpl(`${TOKEN_URL}?${params}`, { method: 'POST' });
-        if (!response.ok) throw new ApiError(502, 'IGDB_AUTH_ERROR', 'A Twitch recusou as credenciais do servidor.');
-        const data = await response.json();
-        token = data.access_token;
-        tokenExpires = now() + (data.expires_in - 60) * 1000;
-        return token;
-    }
-    function throttled(task) {
-        const run = queue.then(task);
-        queue = run.catch(() => { }).then(() => new Promise((done) =>
-            setTimeout(done, MIN_INTERVAL_MS)));
-        return run;
-    } return async function query(endpoint, body, retried = false) {
-        if (!clientId || !clientSecret) {
-            throw new ApiError(503, 'IGDB_NOT_CONFIGURED', 'Configure as credenciais da Twitch em backend /.env.local.');
-        }
-        const response = await throttled(async () => fetchImpl(new
-            URL(endpoint, IGDB_URL), {
-            method: 'POST',
-            headers: {
-                'Client-ID': clientId, Authorization: `Bearer ${await
-                    getToken()}`, Accept: 'application/json'
-            },
-            body,
-            signal: AbortSignal.timeout(15000),
-        }));
-        if (response.status === 401 && !retried) {
-            token = null;
-            return query(endpoint, body, true);
-        }
-        if (response.status === 429) throw new ApiError(503,
-            'IGDB_RATE_LIMIT', 'Limite de consultas da IGDB atingido.'); if (!response.ok) throw new ApiError(502, 'IGDB_UNAVAILABLE', 'A IGDBestá indisponível no momento.');
-        return {
-            data: await response.json(), total:
-                Number(response.headers.get('x-count')) || 0
-        };
-    };
-}
 export const LIST_FIELDS = `fields name,slug,cover.image_id,artworks.image_id,screenshots.image_id,
 summary,rating,rating_count,aggregated_rating,first_release_date,genres.name,genres.slug,platforms.name,game_modes.slug,
 involved_companies.developer,involved_companies.publisher,involved_companies.company.name;`;
 
-const image = (item, size) => item?.image_id
+const image = (item, size) => /^[a-z0-9_]+$/i.test(item?.image_id || '')
     ? `https://images.igdb.com/igdb/image/upload/t_${size}/${item.image_id}.jpg` : null;
 
 export function normalizeGame(game) {
+    if(!game||!Number.isSafeInteger(game.id)||game.id<=0||typeof game.name!=='string')
+        throw new ApiError(502,'IGDB_INVALID_RESPONSE','A IGDB retornou um jogo inválido.');
     const names = (items) => (items || []).map((item) => item.name).filter(Boolean);
     const companies = (role) => (game.involved_companies || [])
         .filter((item) => item[role]).map((item) => item.company?.name).filter(Boolean);
-    const released = game.first_release_date
+    const released = Number.isFinite(game.first_release_date) && Math.abs(game.first_release_date)<8640000000000
         ? new Date(game.first_release_date * 1000).toISOString().slice(0, 10) : null;
     const platforms = names(game.platforms);
     const genres = names(game.genres);
@@ -138,7 +97,7 @@ const DETAIL_FIELDS = LIST_FIELDS.replace(/;$/, ',videos.video_id,videos.name;')
 function normalizeDetails(game) {
     const shots = (game.screenshots || []).map((item) => image(item, '1080p')).filter(Boolean);
     const fallback = (game.artworks || []).map((item) => image(item, '1080p')).filter(Boolean);
-    const videos = (game.videos || []).filter((item) => item.video_id);
+    const videos = (game.videos || []).filter((item) => /^[a-zA-Z0-9_-]{11}$/.test(item.video_id || ''));
     const video = videos.find((item) => /trailer/i.test(item.name || '')) || videos[0];
     return {
         ...normalizeGame(game),
@@ -147,23 +106,26 @@ function normalizeDetails(game) {
     };
 }
 
-export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDiagnostic = () => { }, translateDescription }) {
-    const client = createIgdbClient({ clientId, clientSecret, fetchImpl, now });
+export function createIgdbService({ clientId, clientSecret, fetchImpl, now=Date.now, sleep, timeoutMs, onDiagnostic = () => { }, translateDescription }) {
+    const client = createIgdbClient({ clientId, clientSecret, fetchImpl, now, sleep, timeoutMs });
     const cache = new Map();
+    const pending = new Map();
 
     async function query(endpoint, body) {
         const key = `${endpoint}:${body}`;
         const cached = cache.get(key);
-        if (cached && cached.expires > Date.now()) return cached.value;
-        const value = await client(endpoint, body);
-        if (cache.size >= 100) cache.delete(cache.keys().next().value);
-        cache.set(key, { value, expires: Date.now() + 300000 });
-        return value;
+        if (cached && cached.expires > now()) return cached.value;
+        if(pending.has(key)) return pending.get(key);
+        const task=(async()=>{const value=await client(endpoint,body);
+            if(cache.size>=100) cache.delete(cache.keys().next().value);
+            cache.set(key,{value,expires:now()+300000});return value;})();
+        pending.set(key,task);try{return await task;}finally{pending.delete(key);}
     }
 
     async function getGame(id) {
         const { data } = await query('games', `${DETAIL_FIELDS} where id = ${id}; limit 1;`);
         if (!data[0]) throw new ApiError(404, 'GAME_NOT_FOUND', 'Jogo não encontrado.');
+        if(data[0].id!==id) throw new ApiError(502,'IGDB_INVALID_RESPONSE','A IGDB retornou outro identificador de jogo.');
         const game = normalizeDetails(data[0]);
 
         if (!translateDescription) return game;
@@ -181,7 +143,7 @@ export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDi
                 endpoint: `games/${id}/translation`, attempt: 1, status: null,
                 code: 'TRANSLATION_UNAVAILABLE', retrying: false,
             });
-            return { ...game, description: '', description_translation: 'unavailable', description_language: 'pt-BR' };
+            return { ...game, description_translation: 'unavailable', description_language: null };
         }
     }
 
@@ -191,34 +153,32 @@ export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDi
         const useRelevance = search && sort === 'relevance';
         const where = buildWhere(params, useRelevance ? null : ordering);
         const clauses = [LIST_FIELDS];
-
-        if (useRelevance) {
-            clauses.push(`search ${quoted(search)};`);
-            if (where) clauses.push(`where ${where};`);
-        } else {
-            const byName = search ? `name ~ *${quoted(search)}*` : '';
-            const fullWhere = [byName, where].filter(Boolean).join(' & ');
-            if (fullWhere) clauses.push(`where ${fullWhere};`);
-            clauses.push(`sort ${ORDER[ordering] || ORDER['-added']};`);
-        }
+        const byName = search ? `name ~ *${quoted(search)}*` : '';
+        const fullWhere = [byName, where].filter(Boolean).join(' & ');
+        if (fullWhere) clauses.push(`where ${fullWhere};`);
+        const sorts=useRelevance?'name asc':ordering.split(',').map(key=>ORDER[key]).join(',');
+        if(!sorts) throw new ApiError(400,'INVALID_QUERY','Ordenação inválida.');
+        clauses.push(`sort ${sorts};`);
         clauses.push(`limit ${page_size}; offset ${(page - 1) * page_size};`);
 
-        const { data, total } = await query('games', clauses.join(' '));
-        const hasNext = total ? page * page_size < total : data.length === page_size;
+        const [{data},{data:counter}]=await Promise.all([query('games',clauses.join(' ')),query('games/count',fullWhere?`where ${fullWhere};`:'')]);
+        const total=counter.count;
+        const count=search?Math.min(total,(params.batch||1)*240):total;
+        const hasNext=page*page_size<count;
         return {
-            count: total || data.length,
-            count_scope: 'total',
-            has_more: false,
+            count, total_count:total,
+            count_scope:count<total?'window':'total',
+            has_more:count<total,
             next: hasNext ? page + 1 : null,
             previous: page > 1 ? page - 1 : null,
-            results: data.map(normalizeGame),
+            results: page*page_size-page_size>=count?[]:data.slice(0,Math.max(0,count-(page-1)*page_size)).map(normalizeGame),
         };
     }
 
     async function categories(keys) {
-        const today = Math.floor(Date.now() / 1000);
+        const today = Math.floor(now() / 1000);
         const DAY = 86400;
-        const base = 'cover != null & parent_game = null & version_parent = null';
+        const base = 'cover != null & game_type.type = ("Main Game","Remake","Remaster") & parent_game = null & version_parent = null';
         const rules = {
             emAlta: `where ${base} & first_release_date >= ${today - 730 * DAY} & first_release_date <= ${today}; sort total_rating_count desc;`,
             melhoresAv: `where ${base} & aggregated_rating_count >= 3; sort aggregated_rating desc;`,
@@ -233,19 +193,21 @@ export function createIgdbService({ clientId, clientSecret, fetchImpl, now, onDi
         const games = {};
         const categoryIds = {};
         for (const group of data) {
+            if(!keys.includes(group.name)||!Array.isArray(group.result)||group.error) throw new ApiError(502,'IGDB_INVALID_RESPONSE','A IGDB retornou categorias inválidas.');
             const items = group.result.map(normalizeGame);
             categoryIds[group.name] = items.map((game) => game.id);
             for (const game of items) games[game.id] = game;
         }
+        if(keys.some(key=>!Object.hasOwn(categoryIds,key))) throw new ApiError(502,'IGDB_INVALID_RESPONSE','A IGDB não retornou todas as categorias.');
         return { games, categories: categoryIds };
     }
 
     async function metadata(resource, { page = 1, page_size = 40 }) {
-        const { data, total } = await query(resource,
-            `fields id,name,slug; sort name asc; limit ${page_size}; offset ${(page - 1) * page_size};`);
-        const hasNext = total ? page * page_size < total : data.length === page_size;
+        const [{data},{data:counter}]=await Promise.all([query(resource,
+            `fields id,name,slug; sort name asc; limit ${page_size}; offset ${(page - 1) * page_size};`),query(`${resource}/count`,'')]);
+        const total=counter.count; const hasNext=page*page_size<total;
         return {
-            count: total || data.length,
+            count:total,
             next: hasNext ? page + 1 : null,
             previous: page > 1 ? page - 1 : null,
             results: data,

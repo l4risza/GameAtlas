@@ -4,7 +4,7 @@ import { mkdtemp, readdir, rmdir, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createTranslationService, selectDescription, splitDescription } from '../translation-service.js';
-import { createRawgService } from '../rawg-service.js';
+import { createIgdbService } from '../igdb-service.js';
 
 test('descrições inglesas e espanholas usam detecção automática e destino pt-BR', async () => {
     const calls = [];
@@ -75,23 +75,23 @@ test('uma falha de tradução não bloqueia a fila e não é armazenada como suc
 });
 
 test('detalhes retornam descrição em português e metadados da tradução', async () => {
-    const rawg = createRawgService({ apiKey: 'test-key', fetchImpl: async () => Response.json({ id: 4200, name: 'Portal 2', description_raw: 'A puzzle game.' }),
+    const igdb = createIgdbService({ clientId: 'test', clientSecret: 'secret', sleep: async()=>{}, fetchImpl: async (url) => Response.json(String(url).includes('twitch.tv') ? {access_token:'test',expires_in:3600} : [{ id: 4200, name: 'Portal 2', summary: 'A puzzle game.' }]),
         translateDescription: async () => ({ text: 'Um jogo de quebra-cabeça.', status: 'translated', language: 'pt-BR' }) });
-    const game = await rawg.getGame(4200);
+    const game = await igdb.getGame(4200);
     assert.equal(game.title, 'Portal 2');
     assert.equal(game.description, 'Um jogo de quebra-cabeça.');
     assert.equal(game.description_language, 'pt-BR');
     assert.equal(game.description_translation, 'translated');
 });
 
-test('uma falha na tradução mantém o jogo disponível sem exibir descrição em idioma diferente', async () => {
+test('uma falha na tradução mantém o jogo disponível com a descrição original como fallback', async () => {
     const diagnostics = [];
-    const rawg = createRawgService({ apiKey: 'test-key', fetchImpl: async () => Response.json({ id: 4200, name: 'Portal 2', description_raw: 'A puzzle game.' }),
+    const igdb = createIgdbService({ clientId: 'test', clientSecret: 'secret', sleep: async()=>{}, fetchImpl: async (url) => Response.json(String(url).includes('twitch.tv') ? {access_token:'test',expires_in:3600} : [{ id: 4200, name: 'Portal 2', summary: 'A puzzle game.' }]),
         onDiagnostic: (event) => diagnostics.push(event),
         translateDescription: async () => { throw new Error('Serviço indisponível'); } });
-    const game = await rawg.getGame(4200);
+    const game = await igdb.getGame(4200);
     assert.equal(game.title, 'Portal 2');
-    assert.equal(game.description, '');
+    assert.equal(game.description, 'A puzzle game.');
     assert.equal(game.description_translation, 'unavailable');
     assert.equal(diagnostics[0].code, 'TRANSLATION_UNAVAILABLE');
 });
