@@ -1,4 +1,4 @@
-// Integração com contas sintéticas. Não usa RAWG, não envia e-mails e limpa os dados no finally.
+// Integração com contas sintéticas. Não consulta o provedor de jogos, não envia e-mails e limpa os dados no finally.
 import assert from 'node:assert/strict';
 import { randomUUID, randomBytes, randomInt } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
@@ -65,7 +65,7 @@ try {
     console.log('OK: favoritos do perfil, redes sociais e upload de foto com isolamento entre usuários.');
 
     for(let n=0;n<2;n++) {
-        const row=await result(admin.from('jogos').insert({rawg_id:8000000000000+randomInt(1000000000),nome:'Jogo sintético de configurações'}).select('id').single());games.push(row.data.id);
+        const row=await result(admin.from('jogos').insert({provider:'igdb',rawg_id:8000000000000+randomInt(1000000000),nome:'Jogo sintético de configurações'}).select('id').single());games.push(row.data.id);
     }
     const reviews=[];
     for(let n=0;n<2;n++) {

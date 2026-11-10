@@ -2,23 +2,48 @@ import { database, resultOf } from './supabase';
 import { requestJson } from './api';
 
 const GAME_COLUMNS = 'id,rawg_id,nome,capa_url';
-const REVIEW_COLUMNS = `id,usuario_id,nota,texto,criado_em,atualizado_em,jogos!inner(${GAME_COLUMNS}),perfis(nome,username)`;
+const REVIEW_COLUMNS = `id,usuario_id,nota,texto,criado_em,atualizado_em,curtidas,jogos!inner(${GAME_COLUMNS}),perfis(nome,username,avatar_url)`;
 export const PAGE_SIZE = 12;
 
 export const reviewView = (row) => ({
     id: row.id, userId: row.usuario_id, rawgId: row.jogos.rawg_id,
     gameTitle: row.jogos.nome, gameImage: row.jogos.capa_url, rating: row.nota, text: row.texto,
     author: row.perfis?.username ? `@${row.perfis.username}` : row.perfis?.nome || 'Jogador',
+    authorName: row.perfis?.nome || row.perfis?.username || 'Jogador', username: row.perfis?.username,
+    avatar: row.perfis?.avatar_url, likes: Number(row.curtidas || 0), liked: Boolean(row.liked),
     date: new Date(row.atualizado_em).toLocaleDateString('pt-BR')
 });
 
-export async function loadReviews(page = 1, userId, rawgId, order = 'recentes') {
+export async function loadReviews(page = 1, userId, rawgId, order = 'recentes', excludeUserId) {
     let query = database().from('reviews').select(REVIEW_COLUMNS, { count: 'exact' });
     if (userId) query = query.eq('usuario_id', userId);
+    if (excludeUserId) query = query.neq('usuario_id', excludeUserId);
     if (rawgId) query = query.eq('jogos.rawg_id', rawgId);
+    if (order === 'populares') query = query.order('curtidas', { ascending: false });
     const { data, count } = await resultOf(query.order('atualizado_em', { ascending: order === 'antigas' })
         .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1));
-    return { items: data.map(reviewView), count };
+    const { data: { session } } = await database().auth.getSession();
+    let liked = new Set();
+    if (session && data.length) {
+        const response = await resultOf(database().from('review_curtidas').select('review_id').in('review_id', data.map(row => row.id)));
+        liked = new Set(response.data.map(row => row.review_id));
+    }
+    return { items: data.map(row => reviewView({ ...row, liked: liked.has(row.id) })), count };
+}
+
+export async function reviewLikeState(reviewId) {
+    const { data: { session } } = await database().auth.getSession();
+    if (!session) return false;
+    const { data } = await resultOf(database().from('review_curtidas').select('review_id').eq('review_id', reviewId).maybeSingle());
+    return Boolean(data);
+}
+
+export async function setReviewLike(reviewId, liked) {
+    const { data: { session } } = await database().auth.getSession();
+    if (!session) throw new Error('Entre na sua conta para curtir uma review.');
+    return requestJson(`/reviews/${encodeURIComponent(reviewId)}/curtida`, {
+        method: liked ? 'POST' : 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` },
+    });
 }
 
 export async function loadLists(page = 1, userId, order = 'recentes') {
@@ -115,7 +140,7 @@ export async function loadSavedSummary(userId) {
 export async function loadReview(id) {
     const { data } = await resultOf(database().from('reviews').select(REVIEW_COLUMNS).eq('id', id).maybeSingle());
     if (!data) throw new Error('Esta avaliação não existe mais.');
-    return reviewView(data);
+    return reviewView({ ...data, liked: await reviewLikeState(id) });
 }
 
 // Jogo já guardado no banco (pode não existir se ninguém salvou/avaliou ainda).

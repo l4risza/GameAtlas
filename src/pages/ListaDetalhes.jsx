@@ -2,10 +2,11 @@ import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AccountLayout, { GameTile, Pagination } from '../components/AccountLayout';
 import ApiFeedback from '../components/ApiFeedback';
+import GamePicker from '../components/GamePicker';
 import { useAuth } from '../context/auth-context';
 import { useAccountData } from '../hooks/useAccountData';
 import { database, resultOf, accountError } from '../services/supabase';
-import { PAGE_SIZE, loadSaved, removeSaved } from '../services/account';
+import { PAGE_SIZE, addToList, loadSaved, removeSaved } from '../services/account';
 
 /* ---------- lista geral: Jogos salvos ---------- */
 function SavedList() {
@@ -137,6 +138,11 @@ function CustomList({ id }) {
                     </p>
                     {data.list.descricao && <p>{data.list.descricao}</p>}
                     {owned && <ListEditor key={`${id}:${data.list.publica}:${data.list.nome}`} list={data.list} onSaved={reload} />}
+                    {owned && <details className="account-panel">
+                        <summary>Adicionar jogo à lista</summary>
+                        <GamePicker label="Buscar jogo para adicionar à lista" excludedIds={data.games.map(game => game.rawg_id)}
+                            onSelect={async game => { await addToList(game.id, id); if (page !== 1) setPage(1); else reload(); }} />
+                    </details>}
                     {actionError && <p role="alert">{actionError}</p>}
                     {!data.games.length && (
                         <p>Esta lista ainda não tem jogos. {owned && <Link to="/explorar">Escolha um jogo e use “Adicionar à lista”.</Link>}</p>

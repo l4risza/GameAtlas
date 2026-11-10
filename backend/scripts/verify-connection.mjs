@@ -15,7 +15,7 @@ for (const file of await readdir('./dist/assets')) {
     if (!file.endsWith('.js')) continue;
     const bundle = await readFile('./dist/assets/' + file, 'utf8');
     if ((config.supabaseSecretKey && bundle.includes(config.supabaseSecretKey))
-        || (config.apiKey && bundle.includes(config.apiKey))) leak = true;
+        || (config.twitchClientSecret && bundle.includes(config.twitchClientSecret))) leak = true;
 }
 const response = await fetch(config.supabaseUrl + '/auth/v1/settings',
     { headers: { apikey: config.supabasePublishableKey } });
@@ -23,3 +23,4 @@ if (!response.ok) throw new Error('Não foi possível verificar o cadastro.');
 const settings = await response.json();
 console.log(JSON.stringify({ counts, privateKeysAbsentFromBuild: !leak,
     signupEnabled: !settings.disable_signup, emailConfirmationRequired: !settings.mailer_autoconfirm }));
+if(leak) process.exitCode=1;

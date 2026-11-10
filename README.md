@@ -1,10 +1,14 @@
 # GameAtlas
 
-Projeto de TCC com front-end React/Vite, API Node.js/Express conectada à [RAWG](https://rawg.io/apidocs) e autenticação/dados de usuários no Supabase.
+Projeto de TCC com front-end React/Vite, API Node.js/Express conectada à [IGDB](https://api-docs.igdb.com/) e autenticação/dados de usuários no Supabase.
+
+A fonte de jogos foi migrada da RAWG para a IGDB. O [relatório da migração](docs/auditoria-igdb.md) registra o motivo técnico, as mudanças, os testes e as pendências. A auditoria de 09/11/2026 preservou integralmente os arquivos do front-end da branch `gameatlasIGDB`.
+
+Após essa auditoria, foram autorizados ajustes específicos na interface de [favoritos, listas, reviews e perfis](docs/favoritos-comunidade.md), com média da comunidade GameAtlas e curtidas. O documento registra também as duas migrações adicionais necessárias para esses recursos.
 
 ## Executar no VS Code
 
-Abra a pasta `GameAtlas-RAWG` e execute no terminal:
+Abra a pasta do clone atual e execute no terminal:
 
 ```powershell
 npm install
@@ -12,11 +16,11 @@ npm --prefix backend install
 npm run dev
 ```
 
-O site abre em http://localhost:5173 e a API executa em http://localhost:3001. Nesta cópia local, a configuração privada está em `backend/.env.local`. Em uma nova instalação, copie `backend/.env.example` para `backend/.env.local` e preencha `RAWG_API_KEY` antes de iniciar. Não sobrescreva uma configuração existente.
+O site abre em http://localhost:5173 e a API executa em http://localhost:3001. Nesta cópia local, a configuração privada está em `backend/.env.local`. Em uma nova instalação, copie `backend/.env.example` para `backend/.env.local` e preencha `TWITCH_CLIENT_ID` e `TWITCH_CLIENT_SECRET` antes de iniciar. Não sobrescreva uma configuração existente.
 
 A configuração pública usada pelo login e cadastro acompanha o clone em `src/config/supabase-public.json`. Para usar outro projeto, preencha juntas `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no `.env.local` da raiz e reinicie o site. No backend, preencha também `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_SECRET_KEY`. Os arquivos locais são ignorados pelo Git. Veja o [guia de autenticação](docs/autenticacao.md) e [supabase/README.md](supabase/README.md) para preparar uma nova instalação.
 
-As chaves RAWG e Supabase Secret ficam exclusivamente no servidor. Nunca coloque essas chaves em variáveis `VITE_` ou envie arquivos `.env` para o GitHub. A chave publishable é destinada ao navegador e depende das regras RLS.
+O Twitch Client Secret, os tokens e o Supabase Secret ficam exclusivamente no servidor. Nunca coloque essas credenciais em variáveis `VITE_` ou envie arquivos `.env` para o GitHub. A chave publishable é destinada ao navegador e depende das regras RLS.
 
 ## Implementado nesta etapa
 
@@ -24,11 +28,11 @@ As chaves RAWG e Supabase Secret ficam exclusivamente no servidor. Nunca coloque
 - Busca por trechos do nome pela navbar, com relevância, filtros de plataforma/gênero e paginação em Explorar.
 - Opção de ocultar demos/DLCs, ano e plataformas nos cards e botão para ampliar os resultados consultados.
 - Home e carrossel usando dados e imagens reais.
-- Detalhes ligados à rota `/jogo/:id`, com consulta direta pelo ID RAWG.
-- Descrições em português brasileiro, com cache no servidor.
+- Detalhes ligados à rota `/jogo/:id`, com consulta direta pelo ID IGDB.
+- Descrições em português brasileiro, com cache no servidor e texto original como fallback se a tradução falhar.
 - Rotas de gêneros e plataformas para futuras interfaces de filtro.
 - Validação, cache, timeout e mensagens de erro.
-- Crédito e link RAWG nas páginas que utilizam seus dados.
+- Dados e imagens fornecidos pela IGDB; há um crédito legado na tela Sobre, documentado para a equipe de front-end.
 
 - Cadastro, login, sessão persistente e saída com Supabase Auth.
 - Perfil real com edição de nome, username, bio e foto por URL.
@@ -41,7 +45,7 @@ As rotas atuais usam React também ao abrir diretamente ou recarregar, preservan
 
 ## Estrutura
 
-- `backend/`: servidor Express, serviço RAWG, validações, configuração e testes.
+- `backend/`: servidor Express, cliente OAuth Twitch, serviço IGDB, validações, configuração e testes.
 - `supabase/`: migração das seis tabelas, regras de acesso e testes transacionais do banco.
 - `src/services/api.js`: chamadas do navegador para a API GameAtlas.
 - `src/services/account.js` e `src/services/supabase.js`: operações de contas, listas, avaliações e jogos salvos.
@@ -60,4 +64,4 @@ npm test
 npm run build
 ```
 
-Veja [backend/README.md](backend/README.md) para rotas, exemplos de filtros, configuração e detalhes da integração. Os testes automatizados não usam a chave real nem consomem consultas RAWG. O comando `npm run lint` também verifica arquivos antigos e páginas inacabadas do GitHub, que ainda têm pendências anteriores a esta integração.
+Veja [backend/README.md](backend/README.md) para rotas, filtros, configuração e testes. Os testes automatizados padrão usam mocks. Os scripts de integração real são separados e exigem credenciais locais. As migrações e a estratégia de recuperação estão em [supabase/README.md](supabase/README.md). O relatório registra as limitações que dependem de alterações fora do back-end.

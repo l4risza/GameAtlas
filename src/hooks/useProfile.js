@@ -5,9 +5,9 @@ import { useAccountData } from './useAccountData';
 
 // Perfil do usuário logado: campos básicos + jogos favoritos, redes sociais e preferências
 // (criados pela migração das configurações; sem ela, os extras vêm com os valores padrão).
-export function useProfile() {
+export function useProfile(profileId) {
     const { user } = useAuth();
-    const userId = user?.id;
+    const userId = profileId || user?.id;
     const load = useCallback(async () => {
         if (!userId) return null;
         const { profile, extras } = await loadSettingsProfile(userId);

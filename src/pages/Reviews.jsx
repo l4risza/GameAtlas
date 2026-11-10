@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import AccountLayout, { Pagination } from '../components/AccountLayout';
+import { GameReviewBox } from '../components/GameAccount';
 import ReviewFeedCard from '../components/ReviewFeedCard';
 import ApiFeedback from '../components/ApiFeedback';
 import { useAuth } from '../context/auth-context';
@@ -14,12 +15,13 @@ const positiveInt = (value, max = Infinity) => {
 };
 
 export default function Reviews() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [params, setParams] = useSearchParams();
     const userId = user?.id;
     const rawgId = positiveInt(params.get('jogo'));
     const page = positiveInt(params.get('page'), 10000) ?? 1;
-    const order = params.get('ordem') === 'antigas' ? 'antigas' : 'recentes';
+    const requestedOrder = params.get('ordem');
+    const order = requestedOrder === 'antigas' ? 'antigas' : requestedOrder === 'populares' ? 'populares' : 'recentes';
     const mine = params.get('aba') === 'minhas';
 
     // Monta a URL mantendo o filtro de jogo; mudar aba/ordem volta para a página 1.
@@ -27,7 +29,7 @@ export default function Reviews() {
         const next = {
             ...(rawgId ? { jogo: String(rawgId) } : {}),
             ...(mine ? { aba: 'minhas' } : {}),
-            ...(order === 'antigas' ? { ordem: 'antigas' } : {}),
+            ...(order !== 'recentes' ? { ordem: order } : {}),
             ...changes,
         };
         return Object.fromEntries(Object.entries(next).filter(([, value]) => value));
@@ -35,14 +37,18 @@ export default function Reviews() {
     const href = (changes) => `/reviews?${new URLSearchParams(query(changes))}`;
 
     const load = useCallback(async () => {
-        if (mine && !userId) return null;
+        if (authLoading || (mine && !userId)) return null;
         const [reviews, game] = await Promise.all([
             loadReviews(page, mine ? userId : undefined, rawgId, order),
             rawgId ? findGame(rawgId).catch(() => null) : Promise.resolve(null),
         ]);
         return { ...reviews, game };
-    }, [page, mine, userId, rawgId, order]);
+    }, [authLoading, page, mine, userId, rawgId, order]);
     const { data, loading, error, reload } = useAccountData(`reviews:${userId}:${mine}:${rawgId}:${order}:${page}`, load);
+
+    const emptyText = mine
+        ? 'Você ainda não avaliou nenhum jogo. Abra um jogo e deixe sua nota.'
+        : rawgId ? 'Nenhum jogador avaliou este jogo ainda.' : 'Ainda não há reviews.';
 
     return (
         <AccountLayout title="" requireLogin={mine}>
@@ -72,12 +78,17 @@ export default function Reviews() {
                     {rawgId && <p className="reviews-sub">{data?.game?.nome || 'Este jogo'}</p>}
                     <hr />
 
+                    {rawgId && <GameReviewBox rawgId={rawgId} onChanged={reload} />}
+
+                    {rawgId && <h2 className="reviews-section-title">Reviews dos jogadores</h2>}
+
                     <div className="reviews-toolbar">
                         <span>{rawgId && <Link to="/reviews">Ver todas as reviews</Link>}</span>
                         <label className="account-order">Ordenar por
                             <select className="account-select" value={order}
                                 onChange={(event) => setParams(query({ ordem: event.target.value === 'antigas' ? 'antigas' : '' }))}>
                                 <option value="recentes">Mais recentes</option>
+                                <option value="populares">Mais populares</option>
                                 <option value="antigas">Mais antigas</option>
                             </select>
                         </label>
@@ -87,11 +98,7 @@ export default function Reviews() {
 
                     {data && (
                         <>
-                            {!data.items.length && (
-                                <p className="account-empty">
-                                    {mine ? 'Você ainda não avaliou nenhum jogo. Abra um jogo e deixe sua nota.' : 'Ainda não há reviews.'}
-                                </p>
-                            )}
+                            {!data.items.length && <p className="account-empty">{emptyText}</p>}
                             <div className="feed-list">
                                 {data.items.map((review) => <ReviewFeedCard key={review.id} review={review} />)}
                             </div>

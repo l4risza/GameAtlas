@@ -1,10 +1,11 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import ApiFeedback from '../ApiFeedback';
 import EditableField from './EditableField';
+import FavoriteGamesEditor from './FavoriteGamesEditor';
 import { useAccountData } from '../../hooks/useAccountData';
 import { PROFILE_EXTRAS_DEFAULTS, discardAvatar, loadSettingsProfile, pruneAvatars, updateProfile, uploadAvatar } from '../../services/settings';
-import { BIO_MAX, FAVORITES_MAX, FAVORITE_MAX_LENGTH, NAME_MAX, SOCIALS_MAX, SOCIAL_NETWORKS,
-    checkBio, checkDisplayName, checkFavorite, checkSocial, checkUsername } from '../../services/settings-validation';
+import { BIO_MAX, NAME_MAX, SOCIALS_MAX, SOCIAL_NETWORKS,
+    checkBio, checkDisplayName, checkSocial, checkUsername } from '../../services/settings-validation';
 import avatar from '../../assets/default-avatar.png';
 
 const ORDER_LABEL = { recentes: 'Mais recentes', antigas: 'Mais antigas' };
@@ -17,47 +18,6 @@ function Switch({ checked, onChange, label, disabled }) {
         <button type="button" role="switch" aria-checked={checked} className="config-switch__track" disabled={disabled}
             onClick={() => onChange(!checked)}><span className="config-switch__knob"></span></button>
     </label>;
-}
-
-function FavoriteGamesEditor({ items, disabled, onChange }) {
-    const labelId = useId();
-    const [adding, setAdding] = useState(false);
-    const [draft, setDraft] = useState('');
-    const [error, setError] = useState('');
-    const [busy, setBusy] = useState(false);
-
-    async function change(next, done) {
-        setBusy(true); setError('');
-        try { await onChange(next); done?.(); } catch (e) { setError(message(e)); } finally { setBusy(false); }
-    }
-    function add(event) {
-        event.preventDefault();
-        const checked = checkFavorite(draft, items);
-        if (checked.error) { setError(checked.error); return; }
-        change([...items, checked.value], () => { setDraft(''); setAdding(false); });
-    }
-    return <div className="config-row">
-        <span className="config-label" id={labelId}>Jogos favoritos:</span>
-        <div className="config-field config-field--wrap">
-            <ul className="config-pills" aria-labelledby={labelId}>
-                {items.map((name) => <li className="config-pill" key={name}>{name}
-                    <button type="button" className="config-pill__remove" disabled={disabled || busy} aria-label={`Remover ${name}`}
-                        onClick={() => change(items.filter((item) => item !== name))}><i className="bi bi-x" aria-hidden="true"></i></button>
-                </li>)}
-            </ul>
-            {!adding && <button type="button" className="config-add-btn" aria-label="Adicionar jogo favorito"
-                disabled={disabled || busy || items.length >= FAVORITES_MAX} onClick={() => { setAdding(true); setError(''); }}>
-                <i className="bi bi-plus-lg" aria-hidden="true"></i></button>}
-        </div>
-        {adding && <form className="config-inline-form" onSubmit={add} noValidate>
-            <input className="config-input" value={draft} maxLength={FAVORITE_MAX_LENGTH} placeholder="Nome do jogo"
-                aria-label="Nome do jogo favorito" autoFocus onChange={(event) => setDraft(event.target.value)} />
-            <button className="config-btn" disabled={busy}>Adicionar</button>
-            <button type="button" className="config-btn config-btn--outline" disabled={busy}
-                onClick={() => { setAdding(false); setDraft(''); setError(''); }}>Cancelar</button>
-        </form>}
-        {error && <p className="config-error" role="alert">{error}</p>}
-    </div>;
 }
 
 function SocialLinksEditor({ items, disabled, onChange }) {

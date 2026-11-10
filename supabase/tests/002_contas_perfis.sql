@@ -26,7 +26,7 @@ begin
     then raise exception 'Metadados passaram a divergir do username'; end if;
 end;
 $$;
-insert into public.jogos(rawg_id,nome) values(9000000000000101,'Jogo sintético de configurações'),(9000000000000102,'Outro jogo sintético');
+insert into public.jogos(provider,rawg_id,nome) values('igdb',9000000000000101,'Jogo sintético de configurações'),('igdb',9000000000000102,'Outro jogo sintético');
 insert into public.reviews(usuario_id,jogo_id,nota,criado_em)
 select current_setting('ga.a')::uuid,id,4,case when rawg_id=9000000000000101 then now()-interval '5 days' else now() end
 from public.jogos where rawg_id in(9000000000000101,9000000000000102);

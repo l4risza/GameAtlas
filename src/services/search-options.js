@@ -1,15 +1,14 @@
 export const PLATFORMS = [
-    ['1', 'PC'], ['2', 'PlayStation'], ['3', 'Xbox'], ['7', 'Nintendo'],
-    ['4,8', 'Celular (iOS e Android)'], ['5,6', 'Mac e Linux'], ['11', 'SEGA'], ['14', 'Navegador'],
+    ['pc', 'PC'], ['playstation', 'PlayStation'], ['xbox', 'Xbox'], ['nintendo', 'Nintendo'],
+    ['mobile', 'Celular (iOS e Android)'], ['mac-linux', 'Mac e Linux'], ['sega', 'SEGA'], ['web', 'Navegador'],
 ];
 
 export const GENRES = [
-    ['action', 'Ação'], ['adventure', 'Aventura'], ['role-playing-games-rpg', 'RPG'],
-    ['strategy', 'Estratégia'], ['shooter', 'Tiro'], ['platformer', 'Plataforma'],
-    ['racing', 'Corrida'], ['sports', 'Esportes'], ['fighting', 'Luta'], ['puzzle', 'Quebra-cabeça'],
-    ['simulation', 'Simulação'], ['indie', 'Indie'], ['casual', 'Casual'], ['arcade', 'Arcade'],
-    ['family', 'Família'], ['massively-multiplayer', 'MMO'], ['board-games', 'Tabuleiro'],
-    ['card', 'Cartas'], ['educational', 'Educativo'],
+    ['adventure', 'Aventura'], ['role-playing-rpg', 'RPG'], ['strategy', 'Estratégia'],
+    ['shooter', 'Tiro'], ['platform', 'Plataforma'], ['racing', 'Corrida'],
+    ['sport', 'Esportes'], ['fighting', 'Luta'], ['puzzle', 'Quebra-cabeça'],
+    ['simulator', 'Simulação'], ['indie', 'Indie'], ['arcade', 'Arcade'],
+    ['card-and-board-game', 'Cartas e tabuleiro'],
 ];
 
 export const SORTS = [

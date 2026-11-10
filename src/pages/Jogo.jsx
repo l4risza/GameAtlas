@@ -4,14 +4,16 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ApiFeedback from '../components/ApiFeedback';
 import GameAccount, { GameSaveButton } from '../components/GameAccount';
+import GameReviews from '../components/GameReviews';
+import CommunityRating from '../components/CommunityRating';
+import { ratingColor } from '../services/rating-color';
 import { useGame } from '../hooks/useGame';
 import { useGames } from '../hooks/useGames';
-import { GENRES } from '../services/search-options';
 import '../styles/components.css';
 import '../styles/api.css';
 import '../styles/Jogo.css';
 
-/* Extras opcionais por slug. Sobrescrevem a mídia da RAWG (arquivos em public/). */
+/* Extras opcionais por slug. Sobrescrevem a mídia da IGDB (arquivos em public/). */
 const GAME_EXTRAS = {
     deltarune: {
         longDescription:
@@ -37,6 +39,8 @@ const GAME_EXTRAS = {
             'A trilha sonora é composta pelo próprio Toby Fox, com músicas marcantes que reforçam a emoção e a identidade do jogo.',
     },
 };
+// Referência estável para jogos sem extras (evita recriar o useMemo a cada render).
+const NO_EXTRAS = {};
 
 /* ---------------- helpers ---------------- */
 const PLATFORM_ICONS = [
@@ -62,28 +66,22 @@ const formatTime = (seconds) => {
     return `${minutes}:${rest}`;
 };
 
-function genreSlug(name = '') {
-    const n = name.trim().toLowerCase();
-    return GENRES.find(([slug, label]) => label.toLowerCase() === n || slug === n.replace(/\s+/g, '-'))?.[0] || '';
-}
-
 /* ---------------- avaliação em estrelas (estilo Google Play) ---------------- */
 const formatStars = (value) => value.toFixed(1).replace('.', ',');
 
 function Stars({ value }) {
     const clamped = Math.max(0, Math.min(5, value));
     return (
-        <span className="stars" role="img" aria-label={`${formatStars(clamped)} de 5 estrelas`}>
+        <span className="stars" role="img" aria-label={`${formatStars(clamped)} de 5 estrelas`} style={{ '--star-color': ratingColor(clamped) }}>
             <span className="stars-base" aria-hidden="true">★★★★★</span>
             <span className="stars-fill" aria-hidden="true" style={{ width: `${(clamped / 5) * 100}%` }}>★★★★★</span>
         </span>
     );
 }
 
-function RatingSummary({ publicStars, criticScore, ratings, count }) {
+function RatingSummary({ publicStars, criticScore, ratings, count, gameId }) {
     const hasPublic = typeof publicStars === 'number' && publicStars > 0;
     const hasCritic = typeof criticScore === 'number';
-    if (!hasPublic && !hasCritic) return null;
 
     return (
         <div className="rating">
@@ -93,7 +91,7 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
                         <strong>{formatStars(publicStars)}</strong>
                         <Stars value={publicStars} />
                         <span className="rating-count">
-                            {count ? `${count.toLocaleString('pt-BR')} avaliações` : 'Avaliação do público'}
+                            {count ? `${count.toLocaleString('pt-BR')} avaliações na IGDB` : 'Avaliação do público na IGDB'}
                         </span>
                     </div>
 
@@ -113,6 +111,7 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
                 </div>
             )}
 
+            <div className="rating-comparison">
             {hasCritic && (
                 <div className="rating-critics">
                     <span>Críticos</span>
@@ -120,6 +119,8 @@ function RatingSummary({ publicStars, criticScore, ratings, count }) {
                     <strong>{criticScore}</strong><small>/100</small>
                 </div>
             )}
+            <CommunityRating gameId={gameId} />
+            </div>
         </div>
     );
 }
@@ -141,6 +142,7 @@ function MediaCarousel({ items, alt, onVideoError }) {
     const total = items.length;
     const single = total === 1;
     const isVideo = items[current].type === 'video';
+    const isYoutube = items[current].type === 'youtube';
     const showControls = isVideo && (hover || paused);
     const percent = time.total ? (time.now / time.total) * 100 : 0;
     const goTo = (index) => setCurrent((index + total) % total);
@@ -192,10 +194,11 @@ function MediaCarousel({ items, alt, onVideoError }) {
 
     // imagens avançam sozinhas; o trailer avança quando termina
     useEffect(() => {
-        if (single || isVideo) return undefined;
+        if (single || isVideo || isYoutube) return undefined;
         const timer = setTimeout(() => setCurrent((c) => (c + 1) % total), 6000);
         return () => clearTimeout(timer);
-    }, [current, single, isVideo, total]);
+    }, [current, single, isVideo, isYoutube, total]);
+
 
     // toca o trailer ao entrar nele e reinicia ao sair
     useEffect(() => {
@@ -207,7 +210,7 @@ function MediaCarousel({ items, alt, onVideoError }) {
             video.pause();
             video.currentTime = 0;
         }
-    }, [isVideo]);
+    }, [isVideo])
 
     // mantém a miniatura ativa centralizada sem rolar a página
     useEffect(() => {
@@ -265,6 +268,20 @@ function MediaCarousel({ items, alt, onVideoError }) {
                             />
                         );
                     }
+                    if (item.type === 'youtube') {
+                        if (index !== current) return null;
+                        return (
+                            <iframe
+                                key={item.src}
+                                src={item.src}
+                                title="Trailer do jogo"
+                                className="active"
+                                allow="encrypted-media; picture-in-picture; fullscreen"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                            />
+                        );
+                    }
                     if (!isNear(index)) return null;
                     return (
                         <img
@@ -292,7 +309,7 @@ function MediaCarousel({ items, alt, onVideoError }) {
                             <i className="bi bi-chevron-right"></i>
                         </button>
 
-                        <div className={`carousel-dots${isVideo ? ' above-controls' : ''}`}>
+                        <div className={`carousel-dots${isVideo || isYoutube ? ' above-controls' : ''}`}>
                             {total <= MAX_DOTS ? items.map((item, index) => (
                                 <button
                                     key={item.src}
@@ -357,16 +374,16 @@ function MediaCarousel({ items, alt, onVideoError }) {
                             <div
                                 key={item.src}
                                 ref={(el) => { thumbRefs.current[index] = el; }}
-                                className={`thumb${index === current ? ' active' : ''}${item.type === 'video' ? ' is-video' : ''}`}
+                                className={`thumb${index === current ? ' active' : ''}${item.type !== 'image' ? ' is-video' : ''}`}
                                 onClick={() => goTo(index)}
                             >
                                 <img
-                                    src={item.type === 'video' ? (item.poster || PLACEHOLDER) : item.src}
+                                    src={item.type !== 'image' ? (item.poster || PLACEHOLDER) : item.src}
                                     alt=""
                                     loading="lazy"
                                     onError={fallbackImg}
                                 />
-                                {item.type === 'video' && <i className="bi bi-play-circle-fill"></i>}
+                                {item.type !== 'image' && <i className="bi bi-play-circle-fill"></i>}
                             </div>
                         ))}
                     </div>
@@ -399,14 +416,14 @@ function SimilarGames({ gameId, genre }) {
 
 /* ---------------- conteúdo da página ---------------- */
 function GameDetails({ game, reload }) {
-    const extras = GAME_EXTRAS[game.slug] || {};
+    const extras = GAME_EXTRAS[game.slug] || NO_EXTRAS;
     const [videoFailed, setVideoFailed] = useState(false);
 
-    const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.rawg_rating;
-    const criticScore = extras.criticScore ?? game.metacritic;
+    const publicStars = extras.publicScore !== undefined ? extras.publicScore / 20 : game.public_stars;
+    const criticScore = extras.criticScore ?? game.critic_score;
     const tags = extras.tags || [...(game.genres || []), game.multiplayer && 'Multiplayer'].filter(Boolean);
     const unavailable = game.description_translation === 'unavailable';
-    const fullDescription = game.description || 'Descrição não disponível na RAWG.';
+    const fullDescription = game.description || 'Descrição não disponível.';
 
     const infoList = [
         ['Gênero', game.genre],
@@ -423,12 +440,21 @@ function GameDetails({ game, reload }) {
         const items = [];
 
         if (trailer?.src && !videoFailed) items.push({ type: 'video', src: trailer.src, poster: trailer.poster || cover });
+
+        if (trailer?.youtubeId) {
+            items.push({
+                type: 'youtube',
+                src: `https://www.youtube-nocookie.com/embed/${trailer.youtubeId}`,
+                poster: `https://img.youtube.com/vi/${trailer.youtubeId}/hqdefault.jpg`,
+            });
+        }
+
         [...new Set(shots)].forEach((src) => items.push({ type: 'image', src }));
         if (!items.some((item) => item.type === 'image')) items.push({ type: 'image', src: cover || PLACEHOLDER });
         return items;
     }, [extras, game.trailer, game.screenshots, game.banner, game.image, videoFailed]);
 
-    const slug = genreSlug(game.genres?.[0]);
+    const slug = game.genre_slugs?.[0];
 
     return (
         <div className="top-container">
@@ -474,6 +500,7 @@ function GameDetails({ game, reload }) {
 
                 {/* avaliar o jogo e adicionar às listas (conta do usuário) */}
                 <GameAccount game={game} />
+                <GameReviews key={game.id} gameId={game.id} />
             </div>
 
             {/* COLUNA DIREITA */}
@@ -498,6 +525,7 @@ function GameDetails({ game, reload }) {
                     <div className="tags">{tags.map((t) => <span key={t}>{t}</span>)}</div>
 
                     <RatingSummary
+                        gameId={game.id}
                         publicStars={publicStars}
                         criticScore={criticScore}
                         ratings={game.ratings}
@@ -514,7 +542,7 @@ function GameDetails({ game, reload }) {
                 <div className="col-right-bottom">
                     <div className="box-right">
                         <h2>Plataformas</h2>
-                        <div className="platforms">
+                        <div className="game-platforms">
                             {(game.platforms?.length ? game.platforms : [game.platform]).map((p) => (
                                 <span key={p}><i className={`bi ${platformIcon(p)}`}></i> {p}</span>
                             ))}

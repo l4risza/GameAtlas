@@ -3,7 +3,7 @@ import cors from 'cors';
 import { ApiError } from './errors.js';
 import { gameId, integer, invalid, listQuery, searchQuery, text } from './validation.js';
 
-export function createApp({ rawg, supabaseService, accountService, corsOrigins = [] }) {
+export function createApp({ igdb, supabaseService, accountService, corsOrigins = [] }) {
     const app = express();
     app.disable('x-powered-by');
     app.use(cors({ origin: corsOrigins }));
@@ -17,7 +17,7 @@ export function createApp({ rawg, supabaseService, accountService, corsOrigins =
     app.post('/api/biblioteca/jogos/:id', async (req, res) => {
         const id = gameId(req.params.id);
         if (!supabaseService) throw new ApiError(503, 'DATABASE_NOT_CONFIGURED', 'A conexão com o banco ainda não está configurada.');
-        res.json(await supabaseService.linkGame(req.get('authorization'), id, rawg));
+        res.json(await supabaseService.linkGame(req.get('authorization'), id, igdb));
     });
 
     // Em produção, atrás de proxy, configure app.set('trust proxy', ...) para o limite de tentativas enxergar o IP real.
@@ -33,10 +33,10 @@ export function createApp({ rawg, supabaseService, accountService, corsOrigins =
     app.get('/api/usuarios/disponibilidade', async (req, res) => {
         res.json(await accounts().usernameAvailable(req.query.username));
     });
-    for (const kind of ['reviews','listas']) app.get(`/api/perfis/:id/${kind}`, async (req, res) => {
+    for (const kind of ['reviews', 'listas']) app.get(`/api/perfis/:id/${kind}`, async (req, res) => {
         res.json(await accounts().profileContent(kind, req.params.id, req.query, req.get('authorization')));
     });
-    for (const method of ['post','delete']) app[method]('/api/reviews/:id/curtida', async (req, res) => {
+    for (const method of ['post', 'delete']) app[method]('/api/reviews/:id/curtida', async (req, res) => {
         res.json(await accounts().likeReview(req.get('authorization'), req.params.id, method === 'post'));
     });
     app.post('/api/conta/desativar', express.json({ limit: '2kb' }), async (req, res) => {
@@ -44,14 +44,14 @@ export function createApp({ rawg, supabaseService, accountService, corsOrigins =
     });
 
     app.get('/api/jogos', async (req, res) => {
-        res.json(await rawg.listGames(req.query.search ? searchQuery(req.query) : listQuery(req.query)));
+        res.json(await igdb.listGames(req.query.search ? searchQuery(req.query) : listQuery(req.query)));
     });
 
     // As rotas fixas vêm antes de /:id para não serem interpretadas como IDs.
     app.get('/api/jogos/busca', async (req, res) => {
         const search = text(req.query.q, 'q');
         if (!search) invalid('Informe o parâmetro q para realizar a busca.');
-        res.json(await rawg.listGames({ ...searchQuery(req.query), search }));
+        res.json(await igdb.listGames({ ...searchQuery(req.query), search }));
     });
 
     app.get('/api/jogos/categorias', async (req, res) => {
@@ -59,16 +59,16 @@ export function createApp({ rawg, supabaseService, accountService, corsOrigins =
         const include = text(req.query.include, 'include');
         const keys = include === undefined ? allowed : [...new Set(include.split(','))];
         if (!keys.length || keys.some((key) => !allowed.includes(key))) invalid('include contém uma categoria inválida.');
-        res.json(await rawg.categories(keys));
+        res.json(await igdb.categories(keys));
     });
 
     app.get('/api/jogos/:id', async (req, res) => {
-        res.json(await rawg.getGame(gameId(req.params.id)));
+        res.json(await igdb.getGame(gameId(req.params.id)));
     });
 
     for (const [path, resource] of [['generos', 'genres'], ['plataformas', 'platforms']]) {
         app.get(`/api/${path}`, async (req, res) => {
-            res.json(await rawg.metadata(resource, {
+            res.json(await igdb.metadata(resource, {
                 page: integer(req.query.page, 'page', 1),
                 page_size: integer(req.query.page_size, 'page_size', 40, 40),
             }));
@@ -82,6 +82,7 @@ export function createApp({ rawg, supabaseService, accountService, corsOrigins =
             return res.status(400).json({ erro: 'Dados inválidos.', code: 'INVALID_BODY' });
         }
         const known = error instanceof ApiError;
+
         res.status(known ? error.status : 500).json({
             erro: known ? error.message : 'Erro interno ao processar a solicitação.',
             code: known ? error.code : 'INTERNAL_ERROR',

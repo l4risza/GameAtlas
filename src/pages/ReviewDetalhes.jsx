@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import AccountLayout from '../components/AccountLayout';
 import ApiFeedback from '../components/ApiFeedback';
 import { Stars } from '../components/ReviewCard';
+import ReviewLike from '../components/ReviewLike';
 import { useAuth } from '../context/auth-context';
 import { useAccountData } from '../hooks/useAccountData';
 import { deleteReview, loadReview } from '../services/account';
@@ -41,7 +42,8 @@ export default function ReviewDetalhes() {
                     <div className="review-detail-body">
                         <h2><Link to={`/jogo/${review.rawgId}`}>{review.gameTitle}</Link></h2>
                         <Stars rating={review.rating} />
-                        <p className="account-sub">{review.author} · {review.date}</p>
+                        <p className="account-sub"><Link className="review-author-link" to={`/perfil/${review.userId}`}>{review.author}</Link> · {review.date}</p>
+                        <ReviewLike key={`${review.id}:${review.liked}`} review={review} />
                         {review.text
                             ? <p className="review-detail-text">{review.text}</p>
                             : <p className="account-sub">Esta avaliação não tem comentário.</p>}

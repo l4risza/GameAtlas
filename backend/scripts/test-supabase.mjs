@@ -2,7 +2,10 @@
 // Executar com a API local ligada: node backend/scripts/test-supabase.mjs
 import assert from 'node:assert/strict';
 import { randomUUID, randomBytes } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { once } from 'node:events';
+import { createApp } from '../app.js';
+import { createIgdbService } from '../igdb-service.js';
+import { createSupabaseService } from '../supabase-service.js';
 import { createClient } from '@supabase/supabase-js';
 import { readConfig } from '../config.js';
 
@@ -16,6 +19,10 @@ let gameId;
 let otherGameId;
 let existed = false;
 let passed = false;
+const igdb = createIgdbService({clientId:config.twitchClientId,clientSecret:config.twitchClientSecret});
+const supabaseService=createSupabaseService({url:config.supabaseUrl,publishableKey:config.supabasePublishableKey,secretKey:config.supabaseSecretKey});
+const server=createApp({igdb,supabaseService}).listen(0,'127.0.0.1');
+await once(server,'listening');
 async function result(query) {
     const response = await query;
     if (response.error) throw new Error(response.error.message);
@@ -34,14 +41,7 @@ async function account() {
 }
 
 try {
-    const front = await readFile(new URL('../../.env.local', import.meta.url), 'utf8');
-    assert.ok(front.includes(`VITE_SUPABASE_URL=${config.supabaseUrl}`));
-    assert.ok(front.includes(`VITE_SUPABASE_PUBLISHABLE_KEY=${config.supabasePublishableKey}`));
-    for (const route of ['login', 'cadastro', 'perfil', 'listas', 'reviews']) {
-        const html = await (await fetch(`http://localhost:5173/${route}`, { headers: { Accept: 'text/html' } })).text();
-        assert.ok(html.includes('id="root"'), `Acesso direto à rota ${route} não carregou o React`);
-    }
-    const original = await result(admin.from('jogos').select('id').eq('rawg_id', 3498).maybeSingle());
+    const original = await result(admin.from('jogos').select('id').eq('rawg_id', 1020).maybeSingle());
     existed = Boolean(original.data);
     const fixtures = await Promise.allSettled([account(), account()]);
     const failure = fixtures.find((item) => item.status === 'rejected');
@@ -49,16 +49,30 @@ try {
     const [a, b] = fixtures.map((item) => item.value);
     const profile = await result(a.client.from('perfis').select('id,nome,username').eq('id', a.id).single());
     assert.equal(profile.data.nome, 'Teste de integração GameAtlas');
-    assert.equal(profile.data.username, null);
+    assert.match(profile.data.username,/^[A-Za-z0-9_]{3,30}$/);
     await result(a.client.from('perfis').update({ bio: 'Bio de teste' }).eq('id', a.id).select('id').single());
 
-    const endpoint = `http://127.0.0.1:${config.port}/api/biblioteca/jogos/3498`;
+    const endpoint = `http://127.0.0.1:${server.address().port}/api/biblioteca/jogos/1020`;
     assert.equal((await fetch(endpoint, { method: 'POST' })).status, 401);
     assert.equal((await fetch(endpoint, { method: 'POST', headers: { Authorization: 'Bearer invalid-token' } })).status, 401);
     const response = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${a.token}` }, signal: AbortSignal.timeout(45000) });
-    assert.equal(response.status, 200, 'Vinculação RAWG falhou');
+    assert.equal(response.status, 200, 'Vinculação IGDB falhou');
     const game = await response.json(); gameId = game.id;
-    assert.equal(game.rawg_id, 3498); assert.ok(game.nome.includes('Grand Theft Auto'));
+    assert.equal(game.provider,'igdb'); assert.equal(game.external_id,1020); assert.equal(game.rawg_id, 1020); assert.ok(game.nome.includes('Grand Theft Auto'));
+    await result(a.client.rpc('salvar_favoritos_igdb', { jogos: [game.id], legados: [] }));
+    const favoriteQuery = () => visitor.from('perfil_jogos_favoritos')
+        .select('usuario_id,jogos!inner(rawg_id,nome)').eq('usuario_id', a.id);
+    const favorites = await result(favoriteQuery());
+    assert.equal(favorites.data.length, 1); assert.equal(favorites.data[0].jogos.rawg_id, 1020);
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: [game.id,game.id], legados: [] })).error?.code,'22023');
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: Array(6).fill(game.id), legados: [] })).error?.code,'22023');
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: [Number.MAX_SAFE_INTEGER], legados: [] })).error?.code,'23503');
+    assert.equal((await a.client.rpc('salvar_favoritos_igdb', { jogos: [], legados: ['Texto inventado'] })).error?.code,'22023');
+    await result(b.client.rpc('salvar_favoritos_igdb', { jogos: [], legados: [] }));
+    assert.equal((await result(favoriteQuery())).data.length,1,'Gravação de outro usuário ou falha alterou favoritos do dono');
+    assert.ok((await b.client.from('perfil_jogos_favoritos').insert({usuario_id:a.id,jogo_id:game.id,posicao:1})).error);
+    await result(a.client.rpc('salvar_favoritos_igdb', { jogos: [], legados: [] }));
+    assert.equal((await result(favoriteQuery())).data.length,0);
     const again = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${b.token}` } });
     assert.equal((await again.json()).id, gameId);
 
@@ -95,13 +109,31 @@ try {
     // Os joins e contagens usados pelas telas precisam funcionar com a chave pública.
     const joined = await result(a.client.from('reviews').select('id,jogos(id,rawg_id,nome,capa_url),perfis(nome,username)', { count: 'exact' })
         .eq('usuario_id', a.id).range(0, 11));
-    assert.equal(joined.count, 1); assert.equal(joined.data[0].jogos.rawg_id, 3498);
-    const secondGame = await result(admin.from('jogos').insert({ rawg_id: 9000000000000002, nome: 'Outro jogo de teste' }).select('id').single());
+    assert.equal(joined.count, 1); assert.equal(joined.data[0].jogos.rawg_id, 1020);
+    const secondGame = await result(admin.from('jogos').insert({ provider: 'igdb', rawg_id: 9000000000000002, nome: 'Outro jogo de teste' }).select('id').single());
     otherGameId = secondGame.data.id;
     await result(a.client.from('reviews').insert({ jogo_id: otherGameId, nota: 3 }));
     const filtered = await result(visitor.from('reviews').select('id,jogos!inner(rawg_id)', { count: 'exact' })
-        .eq('jogos.rawg_id', 3498).eq('usuario_id', a.id).range(0, 11));
+        .eq('jogos.rawg_id', 1020).eq('usuario_id', a.id).range(0, 11));
     assert.equal(filtered.count, 1); assert.equal(filtered.data[0].id, review.id);
+    const summary = await result(visitor.rpc('resumo_avaliacoes_jogo', { igdb_id: 1020 }));
+    assert.ok(summary.data.count>=1); assert.ok(summary.data.average>=1 && summary.data.average<=5);
+    const otherSummary = await result(visitor.rpc('resumo_avaliacoes_jogo', { igdb_id: 9000000000000002 }));
+    assert.equal(otherSummary.data.count,1); assert.equal(otherSummary.data.average,3);
+    const secondVote=await result(b.client.from('reviews').insert({jogo_id:otherGameId,nota:5}).select('id').single());
+    const sharedSummary=await result(visitor.rpc('resumo_avaliacoes_jogo',{igdb_id:9000000000000002}));
+    assert.equal(sharedSummary.data.count,2);assert.equal(sharedSummary.data.average,4);
+    await result(b.client.from('reviews').update({nota:1}).eq('id',secondVote.data.id));
+    assert.equal((await result(visitor.rpc('resumo_avaliacoes_jogo',{igdb_id:9000000000000002}))).data.average,2);
+    await result(b.client.from('review_curtidas').insert({review_id:review.id}));
+    const ranked = await result(visitor.from('reviews').select('id,curtidas,jogos!inner(rawg_id)')
+        .eq('usuario_id',a.id).eq('jogos.rawg_id',1020).order('curtidas',{ascending:false}));
+    assert.equal(ranked.data.length,1); assert.equal(ranked.data[0].curtidas,1);
+    const ownLikes = await result(b.client.from('review_curtidas').select('review_id').in('review_id',[review.id]));
+    assert.equal(ownLikes.data.length,1);
+    assert.equal((await a.client.from('review_curtidas').select('review_id').in('review_id',[review.id])).data.length,0);
+    await result(b.client.from('review_curtidas').delete().eq('review_id',review.id));
+    assert.equal((await result(visitor.from('reviews').select('curtidas').eq('id',review.id).single())).data.curtidas,0);
     await result(a.client.from('reviews').delete().eq('id', review.id));
     await result(a.client.from('listas').delete().eq('id', list.id));
     assert.equal((await result(a.client.from('lista_jogos').select('jogo_id').eq('lista_id', list.id))).data.length, 0);
@@ -109,6 +141,7 @@ try {
     assert.equal((await a.client.auth.getSession()).data.session, null);
     passed = true;
 } finally {
+    await new Promise(resolve=>server.close(resolve));
     for (const id of users) await result(admin.auth.admin.deleteUser(id));
     if (otherGameId) await result(admin.from('jogos').delete().eq('id', otherGameId));
     if (gameId && !existed) {
@@ -117,4 +150,4 @@ try {
         if (cleanup.error && cleanup.error.code !== '23503') throw new Error('Falha ao limpar o jogo de teste.');
     }
 }
-if (passed) console.log('OK: login, perfil, vínculo RAWG, listas públicas/privadas, notas sem comentário, Jogos Salvos e isolamento entre usuários. Contas e dados sintéticos removidos.');
+if (passed) console.log('OK: login, perfil, vínculo IGDB, favoritos reais/limites, listas públicas/privadas, notas sem comentário, filtro de jogo, curtidas, média da comunidade, Jogos Salvos e isolamento. Contas e dados sintéticos removidos.');

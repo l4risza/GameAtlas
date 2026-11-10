@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProfileTabs from '../components/ProfileTabs';
@@ -10,6 +10,8 @@ import { useProfile } from '../hooks/useProfile';
 import { accountError } from '../services/supabase';
 import { loadLists, loadReviews } from '../services/account';
 import { SOCIAL_NETWORKS } from '../services/settings-validation';
+import { favoriteKey, favoriteTitle } from '../services/favorite-games-model';
+import '../styles/game-picker.css';
 import '../styles/components.css';
 import '../styles/perfil.css';
 import avatar from '../assets/default-avatar.png';
@@ -32,7 +34,7 @@ export function ProfileItems({ tab, items }) {
 }
 
 // Conteúdo da aba (reviews ou listas). "VER MAIS" carrega a próxima página e acrescenta ao que já está na tela.
-function ProfileContent({ userId, tab, order }) {
+function ProfileContent({ userId, tab, order, own }) {
     const [state, setState] = useState({ items: [], count: 0, page: 0, loading: true, error: '' });
     const [attempt, setAttempt] = useState(0);
     const fetchPage = useCallback((page) => (tab === 'reviews'
@@ -67,7 +69,7 @@ function ProfileContent({ userId, tab, order }) {
         <section className="profile-content">
             {loading && items.length === 0 && <p className="carousel-loading" role="status">Carregando...</p>}
             <ApiFeedback loading={false} error={error} onRetry={retry} />
-            {!loading && !error && items.length === 0 && <p className="carousel-loading">{EMPTY_MESSAGE[tab]}</p>}
+            {!loading && !error && items.length === 0 && <p className="carousel-loading">{own ? EMPTY_MESSAGE[tab] : 'Nenhum conteúdo público nesta aba.'}</p>}
 
             <ProfileItems tab={tab} items={items} />
 
@@ -81,7 +83,7 @@ function ProfileContent({ userId, tab, order }) {
 }
 
 // Parte visual do perfil (o desenho original). Recebe o perfil já carregado do banco.
-export function ProfileView({ profile, tab, onTabChange }) {
+export function ProfileView({ profile, tab, onTabChange, own = true }) {
     // Abas escolhidas em Configurações > "Mostrar no perfil".
     const visibleTabs = [['reviews', profile.mostrar_reviews], ['listas', profile.mostrar_listas]]
         .filter(([, shown]) => shown).map(([key]) => key);
@@ -112,9 +114,9 @@ export function ProfileView({ profile, tab, onTabChange }) {
                                 </a>
                             );
                         })}
-                        <Link to="/configuracoes" className="btn-rede profile-edit">
+                        {own && <Link to="/configuracoes" className="btn-rede profile-edit">
                             <i className="bi bi-pencil-square" aria-hidden="true"></i> Editar
-                        </Link>
+                        </Link>}
                     </div>
                 </div>
 
@@ -126,9 +128,10 @@ export function ProfileView({ profile, tab, onTabChange }) {
                     {profile.jogos_favoritos.length > 0 && (
                         <div className="jogos-fav">
                             {profile.jogos_favoritos.map((game) => (
-                                <span className="tag-jogo-fav" key={game}>
-                                    {game}
-                                </span>
+                                typeof game === 'string' ? <span className="tag-jogo-fav" key={favoriteKey(game)}>{game}</span>
+                                    : <Link className="tag-jogo-fav" key={favoriteKey(game)} to={`/jogo/${game.id}`}>
+                                        {favoriteTitle(game)}
+                                    </Link>
                             ))}
                         </div>
                     )}
@@ -136,7 +139,8 @@ export function ProfileView({ profile, tab, onTabChange }) {
                         <p className="profile-texto">{profile.bio}</p>
                     ) : (
                         <p className="profile-texto profile-texto--empty">
-                            Ainda não há nada por aqui. <Link to="/configuracoes">Edite seu perfil</Link> para contar um pouco sobre você.
+                            {own ? <>Ainda não há nada por aqui. <Link to="/configuracoes">Edite seu perfil</Link> para contar um pouco sobre você.</>
+                                : 'Este usuário ainda não adicionou uma descrição.'}
                         </p>
                     )}
                 </section>
@@ -145,11 +149,12 @@ export function ProfileView({ profile, tab, onTabChange }) {
             {activeTab ? (
                 <>
                     <ProfileTabs active={activeTab} onChange={onTabChange} tabs={visibleTabs} />
-                    <ProfileContent key={`${activeTab}:${order}`} userId={profile.id} tab={activeTab} order={order} />
+                    <ProfileContent key={`${profile.id}:${activeTab}:${order}`} userId={profile.id} tab={activeTab} order={order} own={own} />
                 </>
             ) : (
                 <p className="carousel-loading">
-                    Você ocultou reviews e listas do seu perfil. <Link to="/configuracoes">Mudar em Configurações</Link>
+                    {own ? <>Você ocultou reviews e listas do seu perfil. <Link to="/configuracoes">Mudar em Configurações</Link></>
+                        : 'Este usuário optou por não mostrar reviews e listas no perfil.'}
                 </p>
             )}
         </>
@@ -157,12 +162,13 @@ export function ProfileView({ profile, tab, onTabChange }) {
 }
 
 export default function Perfil() {
+    const { id } = useParams();
     const { user, loading: authLoading, configured, error: authError } = useAuth();
     const location = useLocation();
-    const { profile, loading, error, reload } = useProfile();
+    const { profile, loading, error, reload } = useProfile(id);
     const [tab, setTab] = useState('reviews');
 
-    if (configured && !authLoading && !user) {
+    if (!id && configured && !authLoading && !user) {
         return <Navigate to={`/login?voltar=${encodeURIComponent(location.pathname + location.search)}`} replace />;
     }
 
@@ -179,7 +185,7 @@ export default function Perfil() {
                     <ApiFeedback loading={false} error={error} onRetry={reload} />
                 )}
 
-                {profile && <ProfileView profile={profile} tab={tab} onTabChange={setTab} />}
+                {profile && <ProfileView profile={profile} tab={tab} onTabChange={setTab} own={profile.id === user?.id} />}
             </main>
 
             <Footer />
