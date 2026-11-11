@@ -10,7 +10,7 @@ const ABOUT = {
     year: '2026',
     termsUrl: '[link dos termos de uso]',
     privacyUrl: '[link da política de privacidade]',
-    contactEmail: '[e-mail de contato]',
+    contactEmail: 'gameatlasgglv@gmail.com',
 };
 
 const isPlaceholder = (value) => /^\[.*\]$/.test(String(value ?? '').trim());
@@ -46,7 +46,7 @@ export default function ConfigSobre({ info = ABOUT }) {
         <section aria-labelledby="config-dados-title">
             <h2 className="config-section-title" id="config-dados-title">Dados dos jogos</h2>
             <p className="config-text">As informações e imagens dos jogos são fornecidas pela{' '}
-                <a href="https://rawg.io" target="_blank" rel="noopener noreferrer">RAWG</a>. As reviews e as listas são escritas pelos
+                <a href="https://www.igdb.com" target="_blank" rel="noopener noreferrer">IGDB</a>. As reviews e as listas são escritas pelos
                 usuários do GameAtlas.</p>
         </section>
 
@@ -58,10 +58,11 @@ export default function ConfigSobre({ info = ABOUT }) {
                 texto aberto). No perfil, você escolhe o que preencher: nome de exibição, foto de perfil, descrição, jogos
                 favoritos e redes sociais.</p>
             <p className="config-text">São públicos o seu perfil, suas reviews e as suas listas marcadas como públicas. Outros usuários
-                não veem seu e-mail nem suas listas privadas, e se optar por reviews privadas, elas serão visualizadas
-                somente ao acessar a página de reviews sobre um jogo em específico, não em seu perfil.</p>
+                não veem seu e-mail nem suas listas privadas. Você pode ocultar as reviews no seu perfil, mas elas continuam
+                públicas na página do jogo.</p>
             <p className="config-text">Os dados ficam no Supabase, serviço de banco de dados e autenticação. As informações dos jogos
-                vêm da RAWG. Para pedir a correção ou a exclusão dos seus dados, escreva para [e-mail de contato].</p>
+                vêm da IGDB. Para pedir a correção ou a exclusão dos seus dados, escreva para{' '}
+                <Value text={info.contactEmail} kind="email" />.</p>
         </section>
         <hr className="config-divider" />
 
